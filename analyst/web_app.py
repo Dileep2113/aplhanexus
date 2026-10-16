@@ -466,7 +466,93 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
             flex-direction: column;
             flex-shrink: 0;
             box-shadow: 1px 0 2px rgba(0, 0, 0, 0.02);
-            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }}
+        .sidebar.collapsed {{
+            width: 68px;
+        }}
+        .sidebar.collapsed .brand {{
+            padding: 18px 0;
+            justify-content: center;
+        }}
+        .sidebar.collapsed .brand-info,
+        .sidebar.collapsed .nav-text,
+        .sidebar.collapsed .nav-count,
+        .sidebar.collapsed .nav-category,
+        .sidebar.collapsed .sidebar-footer-text,
+        .sidebar.collapsed .sidebar-collapse-btn {{
+            display: none !important;
+        }}
+        .sidebar.collapsed .sidebar-footer-mini {{
+            display: block !important;
+        }}
+        .sidebar.collapsed .sidebar-footer {{
+            padding: 14px 0 !important;
+        }}
+        .sidebar.collapsed .nav-btn {{
+            justify-content: center;
+            padding: 11px 0;
+            gap: 0;
+            position: relative;
+        }}
+        .sidebar.collapsed .nav-icon {{
+            font-size: 1.25rem;
+            margin: 0;
+        }}
+        /* Floating Tooltip in Collapsed Mode */
+        .sidebar.collapsed .nav-btn:hover::after {{
+            content: attr(data-title);
+            position: absolute;
+            left: 72px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #0f172a;
+            color: #ffffff;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.76rem;
+            font-weight: 500;
+            white-space: nowrap;
+            z-index: 300;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            pointer-events: none;
+        }}
+        .sidebar-collapse-btn {{
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-dimmed);
+            padding: 4px 6px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: auto;
+            transition: all 0.15s;
+        }}
+        .sidebar-collapse-btn:hover {{
+            background: #f1f5f9;
+            color: var(--text-main);
+            border-color: var(--border);
+        }}
+        .desktop-toggle-btn {{
+            display: flex;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 6px 9px;
+            border-radius: 6px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+            transition: all 0.15s;
+        }}
+        .desktop-toggle-btn:hover {{
+            background: #f8fafc;
+            color: var(--text-main);
+            border-color: #94a3b8;
         }}
         .brand {{
             padding: 18px 20px;
@@ -474,6 +560,12 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
             display: flex;
             align-items: center;
             gap: 12px;
+        }}
+        .brand-info {{
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            white-space: nowrap;
         }}
         .brand-badge {{
             width: 32px;
@@ -489,6 +581,7 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
             letter-spacing: -0.5px;
             box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
             flex-shrink: 0;
+            user-select: none;
         }}
         .brand-name {{
             font-weight: 700;
@@ -936,6 +1029,40 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
             .main-viewport {{
                 padding-bottom: 70px;
             }}
+            .desktop-toggle-btn {{
+                display: none;
+            }}
+            .sidebar-collapse-btn {{
+                display: none;
+            }}
+            .sidebar.collapsed {{
+                width: 270px;
+            }}
+            .sidebar.collapsed .brand {{
+                padding: 18px 20px !important;
+                justify-content: flex-start !important;
+            }}
+            .sidebar.collapsed .brand-info,
+            .sidebar.collapsed .nav-text,
+            .sidebar.collapsed .nav-count,
+            .sidebar.collapsed .nav-category,
+            .sidebar.collapsed .sidebar-footer-text {{
+                display: block !important;
+            }}
+            .sidebar.collapsed .sidebar-footer-mini {{
+                display: none !important;
+            }}
+            .sidebar.collapsed .sidebar-footer {{
+                padding: 16px !important;
+            }}
+            .sidebar.collapsed .nav-btn {{
+                justify-content: flex-start !important;
+                padding: 9px 12px !important;
+                gap: 10px !important;
+            }}
+            .sidebar.collapsed .nav-btn:hover::after {{
+                display: none !important;
+            }}
         }}
 
         @media (max-width: 640px) {{
@@ -977,51 +1104,67 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
     <!-- Left Sidebar -->
     <aside class="sidebar" id="app-sidebar">
         <div class="brand">
-            <div class="brand-badge">AN</div>
-            <div>
+            <div class="brand-badge" onclick="toggleSidebarCollapse()" style="cursor:pointer;" title="Toggle sidebar (Ctrl+B)">AN</div>
+            <div class="brand-info">
                 <div class="brand-name">AlphaNexus</div>
                 <div class="brand-sub">Quantitative Suite</div>
             </div>
+            <button class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" title="Collapse sidebar (Ctrl+B)">
+                <svg id="collapse-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+            </button>
             <button class="mobile-close-btn" onclick="toggleSidebar(false)" aria-label="Close navigation">&times;</button>
         </div>
 
         <div class="nav-menu">
             <div class="nav-category">Live Desk</div>
-            <button class="nav-btn active" data-tab="tab-intraday" onclick="switchTab('tab-intraday')">
-                <span>🎯</span> Intraday Desk
+            <button class="nav-btn active" data-tab="tab-intraday" data-title="Intraday Desk" title="Intraday Desk" onclick="switchTab('tab-intraday')">
+                <span class="nav-icon">🎯</span>
+                <span class="nav-text">Intraday Desk</span>
                 <span class="nav-count">{len(intraday)}</span>
             </button>
-            <button class="nav-btn" data-tab="tab-longterm" onclick="switchTab('tab-longterm')">
-                <span>🏛️</span> Long-Term Portfolio
+            <button class="nav-btn" data-tab="tab-longterm" data-title="Long-Term Portfolio" title="Long-Term Portfolio" onclick="switchTab('tab-longterm')">
+                <span class="nav-icon">🏛️</span>
+                <span class="nav-text">Long-Term Portfolio</span>
                 <span class="nav-count">{len(longterm)}</span>
             </button>
 
             <div class="nav-category">Market Intelligence</div>
-            <button class="nav-btn" data-tab="tab-premarket" onclick="switchTab('tab-premarket')">
-                <span>🌅</span> Pre-Market Scenarios
+            <button class="nav-btn" data-tab="tab-premarket" data-title="Pre-Market Scenarios" title="Pre-Market Scenarios" onclick="switchTab('tab-premarket')">
+                <span class="nav-icon">🌅</span>
+                <span class="nav-text">Pre-Market Scenarios</span>
             </button>
-            <button class="nav-btn" data-tab="tab-research" onclick="switchTab('tab-research')">
-                <span>🔍</span> Stock Deep Dive
+            <button class="nav-btn" data-tab="tab-research" data-title="Stock Deep Dive" title="Stock Deep Dive" onclick="switchTab('tab-research')">
+                <span class="nav-icon">🔍</span>
+                <span class="nav-text">Stock Deep Dive</span>
             </button>
 
             <div class="nav-category">Quant & Governance</div>
-            <button class="nav-btn" data-tab="tab-evening" onclick="switchTab('tab-evening')">
-                <span>📈</span> Post-Market Audit
+            <button class="nav-btn" data-tab="tab-evening" data-title="Post-Market Audit" title="Post-Market Audit" onclick="switchTab('tab-evening')">
+                <span class="nav-icon">📈</span>
+                <span class="nav-text">Post-Market Audit</span>
             </button>
-            <button class="nav-btn" data-tab="tab-learning" onclick="switchTab('tab-learning')">
-                <span>🧠</span> Model Self-Learning
+            <button class="nav-btn" data-tab="tab-learning" data-title="Model Self-Learning" title="Model Self-Learning" onclick="switchTab('tab-learning')">
+                <span class="nav-icon">🧠</span>
+                <span class="nav-text">Model Self-Learning</span>
             </button>
-            <button class="nav-btn" data-tab="tab-scheduler" onclick="switchTab('tab-scheduler')">
-                <span>⚙️</span> Automation & Timers
+            <button class="nav-btn" data-tab="tab-scheduler" data-title="Automation & Timers" title="Automation & Timers" onclick="switchTab('tab-scheduler')">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-text">Automation & Timers</span>
             </button>
-            <button class="nav-btn" data-tab="tab-archive" onclick="switchTab('tab-archive')">
-                <span>📁</span> Reports Vault
+            <button class="nav-btn" data-tab="tab-archive" data-title="Reports Vault" title="Reports Vault" onclick="switchTab('tab-archive')">
+                <span class="nav-icon">📁</span>
+                <span class="nav-text">Reports Vault</span>
             </button>
         </div>
 
-        <div style="padding:16px; border-top:1px solid var(--border); font-size:0.74rem; color:var(--text-dimmed); background:#ffffff;">
-            <div>Strategy: <b style="color:#2563eb;">{active_ver}</b></div>
-            <div style="margin-top:3px;">Scheduler: <b style="color:#059669;">DAEMON ACTIVE</b></div>
+        <div class="sidebar-footer" style="padding:14px; border-top:1px solid var(--border); font-size:0.74rem; color:var(--text-dimmed); background:#ffffff;">
+            <div class="sidebar-footer-text">Strategy: <b style="color:#2563eb;">{active_ver}</b></div>
+            <div class="sidebar-footer-text" style="margin-top:3px;">Scheduler: <b style="color:#059669;">DAEMON ACTIVE</b></div>
+            <div class="sidebar-footer-mini" style="display:none; text-align:center;" title="Strategy: {active_ver} | Scheduler: DAEMON ACTIVE">
+                <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#059669; box-shadow:0 0 6px rgba(5,150,105,0.4);"></span>
+            </div>
         </div>
     </aside>
 
@@ -1033,6 +1176,12 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
             <div style="display:flex; align-items:center; gap:10px;">
                 <button class="mobile-toggle-btn" onclick="toggleSidebar(true)" aria-label="Open Navigation">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                </button>
+                <button class="desktop-toggle-btn" onclick="toggleSidebarCollapse()" title="Toggle sidebar (Ctrl+B)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="9" y1="3" x2="9" y2="21"></line>
+                    </svg>
                 </button>
                 <div class="mobile-brand-title">
                     <div class="brand-badge" style="width:28px; height:28px; font-size:0.85rem;">AN</div>
@@ -1359,6 +1508,30 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
                 document.body.style.overflow = '';
             }}
         }}
+
+        function toggleSidebarCollapse() {{
+            const sidebar = document.getElementById('app-sidebar');
+            if (!sidebar) return;
+            const isCollapsed = sidebar.classList.toggle('collapsed');
+            try {{
+                localStorage.setItem('alphanexus_sidebar_collapsed', isCollapsed ? 'true' : 'false');
+            }} catch(e) {{}}
+        }}
+
+        // Restore collapsed state on desktop load
+        try {{
+            if (window.innerWidth > 900 && localStorage.getItem('alphanexus_sidebar_collapsed') === 'true') {{
+                document.getElementById('app-sidebar')?.classList.add('collapsed');
+            }}
+        }} catch(e) {{}}
+
+        // Keyboard shortcut: Ctrl+B or Cmd+B to toggle sidebar
+        document.addEventListener('keydown', (e) => {{
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {{
+                e.preventDefault();
+                toggleSidebarCollapse();
+            }}
+        }});
 
         function switchTab(tabId) {{
             document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
