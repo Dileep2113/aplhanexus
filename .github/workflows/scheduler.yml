@@ -1,0 +1,25 @@
+name: Free Tier Market Automation Cron
+
+on:
+  schedule:
+    # 02:45 UTC = 08:15 IST (Mon-Fri) - Wake Render & Run Pre-Market Briefing
+    - cron: '45 2 * * 1-5'
+    # 04:00, 05:00, 06:00, 07:00, 08:00, 09:00 UTC (Mon-Fri) - Keep Warm & Trigger Scans
+    - cron: '0 4,5,6,7,8,9 * * 1-5'
+    # 11:00 UTC = 16:30 IST (Mon-Fri) - Wake Render & Run Evening Review
+    - cron: '0 11 * * 1-5'
+  workflow_dispatch: # Allows manual run from GitHub UI
+
+jobs:
+  ping-alphanexus:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wake and Trigger AlphaNexus Web Service
+        env:
+          APP_URL: ${{ secrets.ALPHANEXUS_APP_URL || 'http://localhost:8050' }}
+        run: |
+          echo "Pinging AlphaNexus health endpoint at $APP_URL..."
+          curl -s -f -m 60 "$APP_URL/api/health" || echo "Service waking up..."
+          sleep 10
+          echo "Checking scheduler status..."
+          curl -s "$APP_URL/api/status" | grep -o '"platform":"[^"]*"' || true

@@ -1,0 +1,10 @@
+# Free / keyless data stack -- no broker API key required.
+# Pinned exactly; see README "Upgrading to a real-time feed" before bumping.
+yfinance==1.0            # NSE OHLCV via Yahoo (delayed, no key)
+curl_cffi==0.13.0        # browser impersonation for nseindia.com JSON endpoints
+pandas==2.3.3
+numpy==2.2.6
+PyYAML==6.0.3
+pytz==2025.2
+pytest==9.1.1
+psycopg2-binary>=2.9.10  # Optional persistent PostgreSQL support (Neon / Supabase)

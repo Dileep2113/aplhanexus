@@ -1,0 +1,976 @@
+{
+  "timestamp": "2026-10-16T19:40:36.087850",
+  "total_scanned": 15,
+  "macro": {
+    "regime": "RISK_ON",
+    "nifty_close": 23146.15,
+    "vix": 14.08,
+    "gift_nifty_gap": -87.49,
+    "gap_type": "GAP_DOWN",
+    "scenarios": [
+      {
+        "name": "GAP_DOWN_AND_EXTEND (BEARISH)",
+        "bias": "MODERATE",
+        "range": "23,009 - 23,059",
+        "plan": "Exercise capital preservation. Focus strictly on short setups under prior-day low or defensive sectors."
+      },
+      {
+        "name": "SUPPORT BOUNCE (DIP BUYING)",
+        "bias": "SECONDARY",
+        "range": "23,059 - 23,146",
+        "plan": "Wait for 5m candle close above intraday VWAP with volume confirmation before taking long reversal trades."
+      }
+    ]
+  },
+  "intraday": [
+    {
+      "symbol": "ADANIENT",
+      "name": "ADANIENT PDH Breakout",
+      "direction": "LONG",
+      "setup_type": "prior_day_breakout",
+      "trigger": 2717.5,
+      "entry_low": 2717.5,
+      "entry_high": 2724.0,
+      "stop_loss": 2660.64,
+      "target1": 2798.73,
+      "target2": 2879.96,
+      "atr": 81.23,
+      "score": 67.0,
+      "tier": "WATCHLIST",
+      "net_rr": 2.59,
+      "reasons": [
+        "Breakout above prior day high 2717.50",
+        "ATR=81.23, Daily Trend=BEARISH"
+      ],
+      "rejection_reasons": [
+        "Multi-timeframe consensus weak (0/10)"
+      ]
+    },
+    {
+      "symbol": "ADANIPORTS",
+      "name": "ADANIPORTS PDH Breakout",
+      "direction": "LONG",
+      "setup_type": "prior_day_breakout",
+      "trigger": 1761.9,
+      "entry_low": 1761.9,
+      "entry_high": 1765.46,
+      "stop_loss": 1730.72,
+      "target1": 1806.45,
+      "target2": 1851.0,
+      "atr": 44.55,
+      "score": 67.0,
+      "tier": "WATCHLIST",
+      "net_rr": 2.53,
+      "reasons": [
+        "Breakout above prior day high 1761.90",
+        "ATR=44.55, Daily Trend=NEUTRAL"
+      ],
+      "rejection_reasons": [
+        "High corporate event risk today (earnings/board action)"
+      ]
+    },
+    {
+      "symbol": "APOLLOHOSP",
+      "name": "APOLLOHOSP PDH Breakout",
+      "direction": "LONG",
+      "setup_type": "prior_day_breakout",
+      "trigger": 7966.5,
+      "entry_low": 7966.5,
+      "entry_high": 7983.56,
+      "stop_loss": 7817.23,
+      "target1": 8179.75,
+      "target2": 8393.0,
+      "atr": 213.25,
+      "score": 66.0,
+      "tier": "WATCHLIST",
+      "net_rr": 2.59,
+      "reasons": [
+        "Breakout above prior day high 7966.50",
+        "ATR=213.25, Daily Trend=BEARISH"
+      ],
+      "rejection_reasons": [
+        "Multi-timeframe consensus weak (0/10)"
+      ]
+    },
+    {
+      "symbol": "ASIANPAINT",
+      "name": "ASIANPAINT PDH Breakout",
+      "direction": "LONG",
+      "setup_type": "prior_day_breakout",
+      "trigger": 2398.4,
+      "entry_low": 2398.4,
+      "entry_high": 2402.39,
+      "stop_loss": 2363.49,
+      "target1": 2448.27,
+      "target2": 2498.14,
+      "atr": 49.87,
+      "score": 69.0,
+      "tier": "REJECTED",
+      "net_rr": 2.49,
+      "reasons": [
+        "Breakout above prior day high 2398.40",
+        "ATR=49.87, Daily Trend=BEARISH"
+      ],
+      "rejection_reasons": [
+        "Multi-timeframe consensus weak (0/10)",
+        "High corporate event risk today (earnings/board action)"
+      ]
+    },
+    {
+      "symbol": "ASIANPAINT",
+      "name": "ASIANPAINT PDL Breakdown",
+      "direction": "SHORT",
+      "setup_type": "prior_day_breakdown",
+      "trigger": 2349.2,
+      "entry_low": 2345.21,
+      "entry_high": 2349.2,
+      "stop_loss": 2384.11,
+      "target1": 2299.33,
+      "target2": 2249.46,
+      "atr": 49.87,
+      "score": 55.0,
+      "tier": "REJECTED",
+      "net_rr": 2.49,
+      "reasons": [
+        "Breakdown below prior day low 2349.20",
+        "ATR=49.87, Daily Trend=BEARISH"
+      ],
+      "rejection_reasons": [
+        "Multi-timeframe consensus weak (0/10)",
+        "High corporate event risk today (earnings/board action)"
+      ]
+    },
+    {
+      "symbol": "AXISBANK",
+      "name": "AXISBANK PDH Breakout",
+      "direction": "LONG",
+      "setup_type": "prior_day_breakout",
+      "trigger": 1293.8,
+      "entry_low": 1293.8,
+      "entry_high": 1295.86,
+      "stop_loss": 1275.77,
+      "target1": 1319.56,
+      "target2": 1345.32,
+      "atr": 25.76,
+      "score": 85.0,
+      "tier": "STRONG",
+      "net_rr": 2.43,
+      "reasons": [
+        "Breakout above prior day high 1293.80",
+        "ATR=25.76, Daily Trend=BULLISH"
+      ],
+      "rejection_reasons": []
+    },
+    {
+      "symbol": "AXISBANK",
+      "name": "AXISBANK PDL Breakdown",
+      "direction": "SHORT",
+      "setup_type": "prior_day_breakdown",
+      "trigger": 1265.7,
+      "entry_low": 1263.64,
+      "entry_high": 1265.7,
+      "stop_loss": 1283.73,
+      "target1": 1239.94,
+      "target2": 1214.18,
+      "atr": 25.76,
+      "score": 64.0,
+      "tier": "WATCHLIST",
+      "net_rr": 2.44,
+      "reasons": [
+        "Breakdown below prior day low 1265.70",
+        "ATR=25.76, Daily Trend=BULLISH"
+      ],
+      "rejection_reasons": []
+    },
+    {
+      "symbol": "BAJAJ-AUTO",
+      "name": "BAJAJ-AUTO PDH Breakout",
+      "direction": "LONG",
+      "setup_type": "prior_day_breakout",
+      "trigger": 10405.0,
+      "entry_low": 10405.0,
+      "entry_high": 10425.58,
+      "stop_loss": 10224.9,
+      "target1": 10662.28,
+      "target2": 10919.56,
+      "atr": 257.28,
+      "score": 67.0,
+      "tier": "REJECTED",
+      "net_rr": 2.57,
+      "reasons": [
+        "Breakout above prior day high 10405.00",
+        "ATR=257.28, Daily Trend=BEARISH"
+      ],
+      "rejection_reasons": [
+        "Multi-timeframe consensus weak (0/10)",
+        "High corporate event risk today (earnings/board action)"
+      ]
+    },
+    {
+      "symbol": "BAJAJFINSV",
+      "name": "BAJAJFINSV PDH Breakout",
+      "direction": "LONG",
+      "setup_type": "prior_day_breakout",
+      "trigger": 1746.1,
+      "entry_low": 1746.1,
+      "entry_high": 1749.17,
+      "stop_loss": 1719.28,
+      "target1": 1784.42,
+      "target2": 1822.74,
+      "atr": 38.32,
+      "score": 69.0,
+      "tier": "WATCHLIST",
+      "net_rr": 2.49,
+      "reasons": [
+        "Breakout above prior day high 1746.10",
+        "ATR=38.32, Daily Trend=BEARISH"
+      ],
+      "rejection_reasons": [
+        "Multi-timeframe consensus weak (0/10)"
+      ]
+    },
+    {
+      "symbol": "BAJAJFINSV",
+      "name": "BAJAJFINSV PDL Breakdown",
+      "direction": "SHORT",
+      "setup_type": "prior_day_breakdown",
+      "trigger": 1705.0,
+      "entry_low": 1701.93,
+      "entry_high": 1705.0,
+      "stop_loss": 1731.82,
+      "target1": 1666.68,
+      "target2": 1628.36,
+      "atr": 38.32,
+      "score": 55.0,
+      "tier": "REJECTED",
+      "net_rr": 2.5,
+      "reasons": [
+        "Breakdown below prior day low 1705.00",
+        "ATR=38.32, Daily Trend=BEARISH"
+      ],
+      "rejection_reasons": [
+        "Multi-timeframe consensus weak (0/10)"
+      ]
+    },
+    {
+      "symbol": "BAJFINANCE",
+      "name": "BAJFINANCE PDH Breakout",
+      "direction": "LONG",
+      "setup_type": "prior_day_breakout",
+      "trigger": 975.0,
+      "entry_low": 975.0,
+      "entry_high": 977.07,
+      "stop_loss": 956.92,
+      "target1": 1000.83,
+      "target2": 1026.66,
+      "atr": 25.83,
+      "score": 72.0,
+      "tier": "REJECTED",
+      "net_rr": 2.51,
+      "reasons": [
+        "Breakout above prior day high 975.00",
+        "ATR=25.83, Daily Trend=BEARISH"
+      ],
+      "rejection_reasons": [
+        "Multi-timeframe consensus weak (0/10)",
+        "High corporate event risk today (earnings/board action)"
+      ]
+    },
+    {
+      "symbol": "BEL",
+      "name": "BEL PDH Breakout",
+      "direction": "LONG",
+      "setup_type": "prior_day_breakout",
+      "trigger": 382.5,
+      "entry_low": 382.5,
+      "entry_high": 383.09,
+      "stop_loss": 377.32,
+      "target1": 389.9,
+      "target2": 397.3,
+      "atr": 7.4,
+      "score": 72.0,
+      "tier": "REJECTED",
+      "net_rr": 2.35,
+      "reasons": [
+        "Breakout above prior day high 382.50",
+        "ATR=7.40, Daily Trend=BEARISH"
+      ],
+      "rejection_reasons": [
+        "Multi-timeframe consensus weak (0/10)",
+        "High corporate event risk today (earnings/board action)"
+      ]
+    },
+    {
+      "symbol": "BHARTIARTL",
+      "name": "BHARTIARTL PDH Breakout",
+      "direction": "LONG",
+      "setup_type": "prior_day_breakout",
+      "trigger": 1871.1,
+      "entry_low": 1871.1,
+      "entry_high": 1874.3,
+      "stop_loss": 1843.13,
+      "target1": 1911.06,
+      "target2": 1951.02,
+      "atr": 39.96,
+      "score": 87.0,
+      "tier": "WATCHLIST",
+      "net_rr": 2.48,
+      "reasons": [
+        "Breakout above prior day high 1871.10",
+        "ATR=39.96, Daily Trend=BULLISH"
+      ],
+      "rejection_reasons": [
+        "High corporate event risk today (earnings/board action)"
+      ]
+    },
+    {
+      "symbol": "BHARTIARTL",
+      "name": "BHARTIARTL PDL Breakdown",
+      "direction": "SHORT",
+      "setup_type": "prior_day_breakdown",
+      "trigger": 1795.1,
+      "entry_low": 1791.9,
+      "entry_high": 1795.1,
+      "stop_loss": 1823.07,
+      "target1": 1755.14,
+      "target2": 1715.18,
+      "atr": 39.96,
+      "score": 63.0,
+      "tier": "WATCHLIST",
+      "net_rr": 2.5,
+      "reasons": [
+        "Breakdown below prior day low 1795.10",
+        "ATR=39.96, Daily Trend=BULLISH"
+      ],
+      "rejection_reasons": [
+        "High corporate event risk today (earnings/board action)"
+      ]
+    },
+    {
+      "symbol": "BSE",
+      "name": "BSE PDH Breakout",
+      "direction": "LONG",
+      "setup_type": "prior_day_breakout",
+      "trigger": 3445.0,
+      "entry_low": 3445.0,
+      "entry_high": 3453.83,
+      "stop_loss": 3367.71,
+      "target1": 3555.42,
+      "target2": 3665.84,
+      "atr": 110.42,
+      "score": 82.0,
+      "tier": "STRONG",
+      "net_rr": 2.62,
+      "reasons": [
+        "Breakout above prior day high 3445.00",
+        "ATR=110.42, Daily Trend=BULLISH"
+      ],
+      "rejection_reasons": []
+    },
+    {
+      "symbol": "BSE",
+      "name": "BSE PDL Breakdown",
+      "direction": "SHORT",
+      "setup_type": "prior_day_breakdown",
+      "trigger": 3315.2,
+      "entry_low": 3306.37,
+      "entry_high": 3315.2,
+      "stop_loss": 3392.49,
+      "target1": 3204.78,
+      "target2": 3094.36,
+      "atr": 110.42,
+      "score": 58.0,
+      "tier": "REJECTED",
+      "net_rr": 2.63,
+      "reasons": [
+        "Breakdown below prior day low 3315.20",
+        "ATR=110.42, Daily Trend=BULLISH"
+      ],
+      "rejection_reasons": []
+    },
+    {
+      "symbol": "CIPLA",
+      "name": "CIPLA PDH Breakout",
+      "direction": "LONG",
+      "setup_type": "prior_day_breakout",
+      "trigger": 1336.4,
+      "entry_low": 1336.4,
+      "entry_high": 1338.48,
+      "stop_loss": 1318.24,
+      "target1": 1362.34,
+      "target2": 1388.28,
+      "atr": 25.94,
+      "score": 61.0,
+      "tier": "REJECTED",
+      "net_rr": 2.43,
+      "reasons": [
+        "Breakout above prior day high 1336.40",
+        "ATR=25.94, Daily Trend=BEARISH"
+      ],
+      "rejection_reasons": [
+        "Multi-timeframe consensus weak (0/10)",
+        "High corporate event risk today (earnings/board action)"
+      ]
+    },
+    {
+      "symbol": "CIPLA",
+      "name": "CIPLA PDL Breakdown",
+      "direction": "SHORT",
+      "setup_type": "prior_day_breakdown",
+      "trigger": 1310.6,
+      "entry_low": 1308.52,
+      "entry_high": 1310.6,
+      "stop_loss": 1328.76,
+      "target1": 1284.66,
+      "target2": 1258.72,
+      "atr": 25.94,
+      "score": 55.0,
+      "tier": "REJECTED",
+      "net_rr": 2.43,
+      "reasons": [
+        "Breakdown below prior day low 1310.60",
+        "ATR=25.94, Daily Trend=BEARISH"
+      ],
+      "rejection_reasons": [
+        "Multi-timeframe consensus weak (0/10)",
+        "High corporate event risk today (earnings/board action)"
+      ]
+    },
+    {
+      "symbol": "COALINDIA",
+      "name": "COALINDIA PDH Breakout",
+      "direction": "LONG",
+      "setup_type": "prior_day_breakout",
+      "trigger": 420.3,
+      "entry_low": 420.3,
+      "entry_high": 420.97,
+      "stop_loss": 414.48,
+      "target1": 428.62,
+      "target2": 436.94,
+      "atr": 8.32,
+      "score": 82.0,
+      "tier": "STRONG",
+      "net_rr": 2.36,
+      "reasons": [
+        "Breakout above prior day high 420.30",
+        "ATR=8.32, Daily Trend=BULLISH"
+      ],
+      "rejection_reasons": []
+    },
+    {
+      "symbol": "COALINDIA",
+      "name": "COALINDIA PDL Breakdown",
+      "direction": "SHORT",
+      "setup_type": "prior_day_breakdown",
+      "trigger": 415.05,
+      "entry_low": 414.38,
+      "entry_high": 415.05,
+      "stop_loss": 420.87,
+      "target1": 406.73,
+      "target2": 398.41,
+      "atr": 8.32,
+      "score": 58.0,
+      "tier": "REJECTED",
+      "net_rr": 2.37,
+      "reasons": [
+        "Breakdown below prior day low 415.05",
+        "ATR=8.32, Daily Trend=BULLISH"
+      ],
+      "rejection_reasons": []
+    },
+    {
+      "symbol": "DRREDDY",
+      "name": "DRREDDY PDH Breakout",
+      "direction": "LONG",
+      "setup_type": "prior_day_breakout",
+      "trigger": 1234.2,
+      "entry_low": 1234.2,
+      "entry_high": 1236.31,
+      "stop_loss": 1215.73,
+      "target1": 1260.58,
+      "target2": 1286.96,
+      "atr": 26.38,
+      "score": 79.0,
+      "tier": "WATCHLIST",
+      "net_rr": 2.46,
+      "reasons": [
+        "Breakout above prior day high 1234.20",
+        "ATR=26.38, Daily Trend=BULLISH"
+      ],
+      "rejection_reasons": []
+    },
+    {
+      "symbol": "DRREDDY",
+      "name": "DRREDDY PDL Breakdown",
+      "direction": "SHORT",
+      "setup_type": "prior_day_breakdown",
+      "trigger": 1206.6,
+      "entry_low": 1204.49,
+      "entry_high": 1206.6,
+      "stop_loss": 1225.07,
+      "target1": 1180.22,
+      "target2": 1153.84,
+      "atr": 26.38,
+      "score": 61.0,
+      "tier": "WATCHLIST",
+      "net_rr": 2.46,
+      "reasons": [
+        "Breakdown below prior day low 1206.60",
+        "ATR=26.38, Daily Trend=BULLISH"
+      ],
+      "rejection_reasons": []
+    },
+    {
+      "symbol": "EICHERMOT",
+      "name": "EICHERMOT PDH Breakout",
+      "direction": "LONG",
+      "setup_type": "prior_day_breakout",
+      "trigger": 7270.5,
+      "entry_low": 7270.5,
+      "entry_high": 7282.4,
+      "stop_loss": 7166.4,
+      "target1": 7419.22,
+      "target2": 7567.94,
+      "atr": 148.72,
+      "score": 74.0,
+      "tier": "WATCHLIST",
+      "net_rr": 2.51,
+      "reasons": [
+        "Breakout above prior day high 7270.50",
+        "ATR=148.72, Daily Trend=NEUTRAL"
+      ],
+      "rejection_reasons": []
+    },
+    {
+      "symbol": "EICHERMOT",
+      "name": "EICHERMOT PDL Breakdown",
+      "direction": "SHORT",
+      "setup_type": "prior_day_breakdown",
+      "trigger": 7050.0,
+      "entry_low": 7038.1,
+      "entry_high": 7050.0,
+      "stop_loss": 7154.1,
+      "target1": 6901.28,
+      "target2": 6752.56,
+      "atr": 148.72,
+      "score": 58.0,
+      "tier": "REJECTED",
+      "net_rr": 2.52,
+      "reasons": [
+        "Breakdown below prior day low 7050.00",
+        "ATR=148.72, Daily Trend=NEUTRAL"
+      ],
+      "rejection_reasons": []
+    }
+  ],
+  "longterm": [
+    {
+      "symbol": "ADANIENT.NS",
+      "name": "Adani Enterprises Limited",
+      "sector": "Energy",
+      "industry": "Thermal Coal",
+      "ltp": 2692.0,
+      "market_cap_cr": 364422.1292544,
+      "pe_ratio": 43.39136,
+      "roe": null,
+      "debt_to_equity": 119.56,
+      "rev_growth": 49.9,
+      "score": 64,
+      "verdict": "HOLD",
+      "valuation_verdict": "Fair Value",
+      "valuation_scenarios": {
+        "base": 3634.2,
+        "bull": 4307.2,
+        "bear": 2288.2
+      },
+      "thesis": "Adani Enterprises Limited (ADANIENT.NS) shows a long-term institutional rating of HOLD (Score: 64/100, 5/10 criteria passed). Revenue is expanding at +49.9% YoY with operating margins at 9.4%. Price is currently below or near the 200 EMA; require base confirmation before aggressive allocation. Valuation stands at P/E 43.4x (Fair Value). Intrinsic targets: Base \u20b93,634.2, Bull \u20b94,307.2, Bear \u20b92,288.2.",
+      "strengths": [
+        "Strong YoY Rev Growth (+49.9%)"
+      ],
+      "risks": []
+    },
+    {
+      "symbol": "ADANIPORTS.NS",
+      "name": "Adani Ports and Special Economic Zone Limited",
+      "sector": "Industrials",
+      "industry": "Marine Shipping",
+      "ltp": 1750.800048828125,
+      "market_cap_cr": 403377.1470848,
+      "pe_ratio": 29.882233,
+      "roe": null,
+      "debt_to_equity": 64.051,
+      "rev_growth": 18.6,
+      "score": 74,
+      "verdict": "ACCUMULATE",
+      "valuation_verdict": "Fair Value",
+      "valuation_scenarios": {
+        "base": 1792.82,
+        "bull": 1838.34,
+        "bear": 1488.18
+      },
+      "thesis": "Adani Ports and Special Economic Zone Limited (ADANIPORTS.NS) shows a long-term institutional rating of ACCUMULATE (Score: 74/100, 7/10 criteria passed). Revenue is expanding at +18.6% YoY with operating margins at 44.6%. Price is currently below or near the 200 EMA; require base confirmation before aggressive allocation. Valuation stands at P/E 29.9x (Fair Value). Intrinsic targets: Base \u20b91,792.8, Bull \u20b91,838.3, Bear \u20b91,488.2.",
+      "strengths": [
+        "Strong YoY Rev Growth (+18.6%)",
+        "High Operating Margin (44.6%)"
+      ],
+      "risks": []
+    },
+    {
+      "symbol": "APOLLOHOSP.NS",
+      "name": "Apollo Hospitals Enterprise Limited",
+      "sector": "Healthcare",
+      "industry": "Medical Care Facilities",
+      "ltp": 7890.0,
+      "market_cap_cr": 113446.0928,
+      "pe_ratio": 54.3164,
+      "roe": null,
+      "debt_to_equity": 85.146,
+      "rev_growth": 20.599999999999998,
+      "score": 72,
+      "verdict": "ACCUMULATE",
+      "valuation_verdict": "Premium",
+      "valuation_scenarios": {
+        "base": 10580.49,
+        "bull": 11522.16,
+        "bear": 6706.5
+      },
+      "thesis": "Apollo Hospitals Enterprise Limited (APOLLOHOSP.NS) shows a long-term institutional rating of ACCUMULATE (Score: 72/100, 6/10 criteria passed). Revenue is expanding at +20.6% YoY with operating margins at 12.2%. Price is currently below or near the 200 EMA; require base confirmation before aggressive allocation. Valuation stands at P/E 54.3x (Premium). Intrinsic targets: Base \u20b910,580.5, Bull \u20b911,522.2, Bear \u20b96,706.5.",
+      "strengths": [
+        "Strong YoY Rev Growth (+20.6%)",
+        "Robust Profit Growth (+34.1%)"
+      ],
+      "risks": []
+    },
+    {
+      "symbol": "ASIANPAINT.NS",
+      "name": "Asian Paints Limited",
+      "sector": "Basic Materials",
+      "industry": "Specialty Chemicals",
+      "ltp": 2331.89990234375,
+      "market_cap_cr": 223546.2582272,
+      "pe_ratio": 46.938404,
+      "roe": null,
+      "debt_to_equity": 17.847,
+      "rev_growth": 17.9,
+      "score": 76,
+      "verdict": "ACCUMULATE",
+      "valuation_verdict": "Premium",
+      "valuation_scenarios": {
+        "base": 3148.06,
+        "bull": 3587.98,
+        "bear": 1982.11
+      },
+      "thesis": "Asian Paints Limited (ASIANPAINT.NS) shows a long-term institutional rating of ACCUMULATE (Score: 76/100, 7/10 criteria passed). Revenue is expanding at +17.9% YoY with operating margins at 17.7%. Price is currently below or near the 200 EMA; require base confirmation before aggressive allocation. Valuation stands at P/E 46.9x (Premium). Intrinsic targets: Base \u20b93,148.1, Bull \u20b93,588.0, Bear \u20b91,982.1.",
+      "strengths": [
+        "Strong YoY Rev Growth (+17.9%)",
+        "Robust Profit Growth (+39.9%)",
+        "Conservative Debt (<50 D/E)"
+      ],
+      "risks": []
+    },
+    {
+      "symbol": "AXISBANK.NS",
+      "name": "Axis Bank Limited",
+      "sector": "Financial Services",
+      "industry": "Banks - Regional",
+      "ltp": 1290.0,
+      "market_cap_cr": 401676.7238144,
+      "pe_ratio": 14.505791,
+      "roe": 13.352998999999999,
+      "debt_to_equity": 0.0,
+      "rev_growth": 14.000000000000002,
+      "score": 86,
+      "verdict": "STRONG BUY",
+      "valuation_verdict": "Attractive",
+      "valuation_scenarios": {
+        "base": 1571.22,
+        "bull": 1669.65,
+        "bear": 1096.5
+      },
+      "thesis": "Axis Bank Limited (AXISBANK.NS) shows a long-term institutional rating of STRONG BUY (Score: 86/100, 10/10 criteria passed). Revenue is expanding at +14.0% YoY with operating margins at 49.2%. Price is structurally supported above its 200 EMA at \u20b91,290.00. Valuation stands at P/E 14.5x (Attractive). Intrinsic targets: Base \u20b91,571.2, Bull \u20b91,669.6, Bear \u20b91,096.5.",
+      "strengths": [
+        "Robust Profit Growth (+21.8%)",
+        "High Operating Margin (49.2%)",
+        "Healthy ROA (1.54%)"
+      ],
+      "risks": []
+    },
+    {
+      "symbol": "BAJAJ-AUTO.NS",
+      "name": "Bajaj Auto Limited",
+      "sector": "Consumer Cyclical",
+      "industry": "Auto Manufacturers",
+      "ltp": 10405.0,
+      "market_cap_cr": 285933.3844992,
+      "pe_ratio": 24.744352,
+      "roe": null,
+      "debt_to_equity": 56.352,
+      "rev_growth": 64.0,
+      "score": 80,
+      "verdict": "STRONG BUY",
+      "valuation_verdict": "Attractive",
+      "valuation_scenarios": {
+        "base": 14046.75,
+        "bull": 16648.0,
+        "bear": 8844.25
+      },
+      "thesis": "Bajaj Auto Limited (BAJAJ-AUTO.NS) shows a long-term institutional rating of STRONG BUY (Score: 80/100, 8/10 criteria passed). Revenue is expanding at +64.0% YoY with operating margins at 21.5%. Price is currently below or near the 200 EMA; require base confirmation before aggressive allocation. Valuation stands at P/E 24.7x (Attractive). Intrinsic targets: Base \u20b914,046.8, Bull \u20b916,648.0, Bear \u20b98,844.2.",
+      "strengths": [
+        "Strong YoY Rev Growth (+64.0%)",
+        "Robust Profit Growth (+45.8%)",
+        "High Operating Margin (21.5%)"
+      ],
+      "risks": []
+    },
+    {
+      "symbol": "BAJAJFINSV.NS",
+      "name": "Bajaj Finserv Ltd.",
+      "sector": "Financial Services",
+      "industry": "Financial Conglomerates",
+      "ltp": 1729.0,
+      "market_cap_cr": 276682.3227392,
+      "pe_ratio": 27.448801,
+      "roe": null,
+      "debt_to_equity": 256.404,
+      "rev_growth": 19.3,
+      "score": 76,
+      "verdict": "ACCUMULATE",
+      "valuation_verdict": "Fair Value",
+      "valuation_scenarios": {
+        "base": 1948.58,
+        "bull": 2025.44,
+        "bear": 1469.65
+      },
+      "thesis": "Bajaj Finserv Ltd. (BAJAJFINSV.NS) shows a long-term institutional rating of ACCUMULATE (Score: 76/100, 8/10 criteria passed). Revenue is expanding at +19.3% YoY with operating margins at 40.2%. Price is currently below or near the 200 EMA; require base confirmation before aggressive allocation. Valuation stands at P/E 27.4x (Fair Value). Intrinsic targets: Base \u20b91,948.6, Bull \u20b92,025.4, Bear \u20b91,469.6.",
+      "strengths": [
+        "Strong YoY Rev Growth (+19.3%)",
+        "High Operating Margin (40.2%)"
+      ],
+      "risks": [
+        "High Leverage (>150 D/E)"
+      ]
+    },
+    {
+      "symbol": "BAJFINANCE.NS",
+      "name": "Bajaj Finance Limited",
+      "sector": "Financial Services",
+      "industry": "Credit Services",
+      "ltp": 982.0999755859375,
+      "market_cap_cr": 611249.553408,
+      "pe_ratio": 29.360237,
+      "roe": null,
+      "debt_to_equity": 314.833,
+      "rev_growth": 26.1,
+      "score": 77,
+      "verdict": "ACCUMULATE",
+      "valuation_verdict": "Fair Value",
+      "valuation_scenarios": {
+        "base": 1249.23,
+        "bull": 1342.73,
+        "bear": 834.78
+      },
+      "thesis": "Bajaj Finance Limited (BAJFINANCE.NS) shows a long-term institutional rating of ACCUMULATE (Score: 77/100, 8/10 criteria passed). Revenue is expanding at +26.1% YoY with operating margins at 61.6%. Price is currently below or near the 200 EMA; require base confirmation before aggressive allocation. Valuation stands at P/E 29.4x (Fair Value). Intrinsic targets: Base \u20b91,249.2, Bull \u20b91,342.7, Bear \u20b9834.8.",
+      "strengths": [
+        "Strong YoY Rev Growth (+26.1%)",
+        "Robust Profit Growth (+27.2%)",
+        "High Operating Margin (61.6%)"
+      ],
+      "risks": [
+        "High Leverage (>150 D/E)"
+      ]
+    },
+    {
+      "symbol": "BEL.NS",
+      "name": "Bharat Electronics Limited",
+      "sector": "Industrials",
+      "industry": "Aerospace & Defense",
+      "ltp": 376.8500061035156,
+      "market_cap_cr": 275469.0154496,
+      "pe_ratio": 44.8631,
+      "roe": null,
+      "debt_to_equity": 0.273,
+      "rev_growth": 24.9,
+      "score": 74,
+      "verdict": "ACCUMULATE",
+      "valuation_verdict": "Fair Value",
+      "valuation_scenarios": {
+        "base": 408.13,
+        "bull": 419.08,
+        "bear": 320.32
+      },
+      "thesis": "Bharat Electronics Limited (BEL.NS) shows a long-term institutional rating of ACCUMULATE (Score: 74/100, 7/10 criteria passed). Revenue is expanding at +24.9% YoY with operating margins at 22.1%. Price is currently below or near the 200 EMA; require base confirmation before aggressive allocation. Valuation stands at P/E 44.9x (Fair Value). Intrinsic targets: Base \u20b9408.1, Bull \u20b9419.1, Bear \u20b9320.3.",
+      "strengths": [
+        "Strong YoY Rev Growth (+24.9%)",
+        "High Operating Margin (22.1%)",
+        "Conservative Debt (<50 D/E)"
+      ],
+      "risks": []
+    },
+    {
+      "symbol": "BHARTIARTL.NS",
+      "name": "Bharti Airtel Limited",
+      "sector": "Communication Services",
+      "industry": "Telecom Services",
+      "ltp": 1905.0,
+      "market_cap_cr": 1188464.3221504,
+      "pe_ratio": 39.820232,
+      "roe": 20.151,
+      "debt_to_equity": 100.415,
+      "rev_growth": 18.4,
+      "score": 86,
+      "verdict": "STRONG BUY",
+      "valuation_verdict": "Fair Value",
+      "valuation_scenarios": {
+        "base": 2571.75,
+        "bull": 2807.68,
+        "bear": 1619.25
+      },
+      "thesis": "Bharti Airtel Limited (BHARTIARTL.NS) shows a long-term institutional rating of STRONG BUY (Score: 86/100, 9/10 criteria passed). Revenue is expanding at +18.4% YoY with operating margins at 32.6%. Price is structurally supported above its 200 EMA at \u20b91,905.00. Valuation stands at P/E 39.8x (Fair Value). Intrinsic targets: Base \u20b92,571.8, Bull \u20b92,807.7, Bear \u20b91,619.2.",
+      "strengths": [
+        "Strong YoY Rev Growth (+18.4%)",
+        "Robust Profit Growth (+35.1%)",
+        "High Operating Margin (32.6%)",
+        "Strong Cash Generator (FCF \u20b963,057 Cr)"
+      ],
+      "risks": []
+    },
+    {
+      "symbol": "BSE.NS",
+      "name": "BSE Limited",
+      "sector": "Financial Services",
+      "industry": "Financial Data & Stock Exchanges",
+      "ltp": 3363.0,
+      "market_cap_cr": 136581.218304,
+      "pe_ratio": 48.92348,
+      "roe": null,
+      "debt_to_equity": 0.0,
+      "rev_growth": 64.0,
+      "score": 78,
+      "verdict": "ACCUMULATE",
+      "valuation_verdict": "Premium",
+      "valuation_scenarios": {
+        "base": 4540.05,
+        "bull": 5380.8,
+        "bear": 2858.55
+      },
+      "thesis": "BSE Limited (BSE.NS) shows a long-term institutional rating of ACCUMULATE (Score: 78/100, 7/10 criteria passed). Revenue is expanding at +64.0% YoY with operating margins at 80.1%. Price is structurally supported above its 200 EMA at \u20b93,363.00. Valuation stands at P/E 48.9x (Premium). Intrinsic targets: Base \u20b94,540.1, Bull \u20b95,380.8, Bear \u20b92,858.5.",
+      "strengths": [
+        "Strong YoY Rev Growth (+64.0%)",
+        "Robust Profit Growth (+62.1%)",
+        "High Operating Margin (80.1%)",
+        "Conservative Debt (<50 D/E)"
+      ],
+      "risks": []
+    },
+    {
+      "symbol": "CIPLA.NS",
+      "name": "Cipla Limited",
+      "sector": "Healthcare",
+      "industry": "Drug Manufacturers - Specialty & Generic",
+      "ltp": 1325.0999755859375,
+      "market_cap_cr": 107050.9326336,
+      "pe_ratio": 31.776978,
+      "roe": null,
+      "debt_to_equity": 1.778,
+      "rev_growth": 3.5000000000000004,
+      "score": 45,
+      "verdict": "AVOID",
+      "valuation_verdict": "Fair Value",
+      "valuation_scenarios": {
+        "base": 1126.33,
+        "bull": 1391.35,
+        "bear": 927.57
+      },
+      "thesis": "Cipla Limited (CIPLA.NS) shows a long-term institutional rating of AVOID (Score: 45/100, 4/10 criteria passed). Price is currently below or near the 200 EMA; require base confirmation before aggressive allocation. Valuation stands at P/E 31.8x (Fair Value). Intrinsic targets: Base \u20b91,126.3, Bull \u20b91,391.4, Bear \u20b9927.6.",
+      "strengths": [
+        "Conservative Debt (<50 D/E)"
+      ],
+      "risks": [
+        "Earnings Contraction (-39.2%)"
+      ]
+    },
+    {
+      "symbol": "COALINDIA.NS",
+      "name": "Coal India Limited",
+      "sector": "Energy",
+      "industry": "Thermal Coal",
+      "ltp": 417.20001220703125,
+      "market_cap_cr": 257109.0264064,
+      "pe_ratio": 8.22069,
+      "roe": null,
+      "debt_to_equity": 11.629,
+      "rev_growth": 45.1,
+      "score": 78,
+      "verdict": "ACCUMULATE",
+      "valuation_verdict": "Attractive",
+      "valuation_scenarios": {
+        "base": 422.21,
+        "bull": 438.06,
+        "bear": 354.62
+      },
+      "thesis": "Coal India Limited (COALINDIA.NS) shows a long-term institutional rating of ACCUMULATE (Score: 78/100, 7/10 criteria passed). Revenue is expanding at +45.1% YoY with operating margins at 21.1%. Price is structurally supported above its 200 EMA at \u20b9417.20. Valuation stands at P/E 8.2x (Attractive). Intrinsic targets: Base \u20b9422.2, Bull \u20b9438.1, Bear \u20b9354.6.",
+      "strengths": [
+        "Strong YoY Rev Growth (+45.1%)",
+        "High Operating Margin (21.1%)",
+        "Conservative Debt (<50 D/E)"
+      ],
+      "risks": []
+    },
+    {
+      "symbol": "DRREDDY.NS",
+      "name": "Dr. Reddy's Laboratories Limited",
+      "sector": "Healthcare",
+      "industry": "Drug Manufacturers - Specialty & Generic",
+      "ltp": 1233.0,
+      "market_cap_cr": 102707.494912,
+      "pe_ratio": 31.026672,
+      "roe": 8.836999500000001,
+      "debt_to_equity": 18.605,
+      "rev_growth": -5.6000000000000005,
+      "score": 54,
+      "verdict": "HOLD",
+      "valuation_verdict": "Fair Value",
+      "valuation_scenarios": {
+        "base": 1048.05,
+        "bull": 1294.65,
+        "bear": 863.1
+      },
+      "thesis": "Dr. Reddy's Laboratories Limited (DRREDDY.NS) shows a long-term institutional rating of HOLD (Score: 54/100, 6/10 criteria passed). Price is structurally supported above its 200 EMA at \u20b91,233.00. Valuation stands at P/E 31.0x (Fair Value). Intrinsic targets: Base \u20b91,048.0, Bull \u20b91,294.7, Bear \u20b9863.1.",
+      "strengths": [
+        "Conservative Debt (<50 D/E)"
+      ],
+      "risks": [
+        "Declining Revenue (-5.6%)",
+        "Earnings Contraction (-68.7%)",
+        "Thin Margins (4.3%)"
+      ]
+    },
+    {
+      "symbol": "EICHERMOT.NS",
+      "name": "Eicher Motors Limited",
+      "sector": "Consumer Cyclical",
+      "industry": "Auto Manufacturers",
+      "ltp": 7284.5,
+      "market_cap_cr": 199975.3314304,
+      "pe_ratio": 34.663338,
+      "roe": null,
+      "debt_to_equity": 2.048,
+      "rev_growth": 31.5,
+      "score": 74,
+      "verdict": "ACCUMULATE",
+      "valuation_verdict": "Fair Value",
+      "valuation_scenarios": {
+        "base": 8836.1,
+        "bull": 9379.16,
+        "bear": 6191.82
+      },
+      "thesis": "Eicher Motors Limited (EICHERMOT.NS) shows a long-term institutional rating of ACCUMULATE (Score: 74/100, 7/10 criteria passed). Revenue is expanding at +31.5% YoY with operating margins at 19.8%. Price is currently below or near the 200 EMA; require base confirmation before aggressive allocation. Valuation stands at P/E 34.7x (Fair Value). Intrinsic targets: Base \u20b98,836.1, Bull \u20b99,379.2, Bear \u20b96,191.8.",
+      "strengths": [
+        "Strong YoY Rev Growth (+31.5%)",
+        "Robust Profit Growth (+21.3%)",
+        "Conservative Debt (<50 D/E)"
+      ],
+      "risks": []
+    }
+  ]
+}

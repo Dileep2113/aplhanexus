@@ -1,0 +1,39 @@
+# Intraday monitoring configuration.
+# Risk limits here are hard ceilings: the engine refuses to size a position
+# that breaches them rather than rounding down silently (spec section 17).
+
+risk:
+  account_capital: 500000        # INR
+  risk_per_trade_pct: 0.5        # % of capital risked per trade
+  max_daily_loss_pct: 1.5        # cumulative realised loss that halts trading
+  max_open_positions: 3
+  max_trades_per_day: 5
+  max_exposure_pct: 40.0         # % of capital deployable at once
+  lot_rounding: 1                # cash equities trade in single shares
+
+data:
+  # Free sources are delayed. The engine labels every price with its lag and
+  # will not emit an actionable ENTRY alert on data it knows to be stale.
+  primary: yahoo                 # yahoo | replay
+  context: nse                   # nse | none
+  max_bar_age_seconds: 1200      # beyond this a quote is marked STALE
+  intraday_interval: 5m          # bar size the loop consumes
+  vwap_interval: 5m              # bars used to accumulate session VWAP
+  request_timeout_seconds: 25
+  nse_min_request_gap_seconds: 1.5   # politeness throttle for nseindia.com
+
+monitor:
+  poll_seconds: 60               # how often the loop refetches
+  pre_entry_atr_fraction: 0.35   # distance from trigger that fires PRE_ENTRY
+  confirm_bars: 1                # closed bars beyond trigger required for ENTRY
+  require_volume_confirmation: true
+  volume_confirm_rvol: 1.2       # bar volume vs recent average on the trigger bar
+  entry_expiry_ist: "14:45"      # setups stop arming after this time
+  square_off_ist: "15:15"        # ACTIVE setups get a mandatory exit alert
+  alert_cooldown_seconds: 120    # suppress duplicate alerts of the same kind
+
+session:
+  open_ist: "09:15"
+  close_ist: "15:30"
+  pre_open_ist: "09:00"
+  no_trade_until_ist: "09:30"    # section 22: avoid the opening 15 minutes

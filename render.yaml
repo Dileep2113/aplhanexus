@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: alphanexus-trading-suite
+    runtime: python
+    plan: free
+    region: oregon # or frankfurt, singapore, etc.
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: python run_web.py
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: ENVIRONMENT
+        value: production
+      - key: ENABLE_LIVE_BROKER_EXECUTION
+        value: "false"

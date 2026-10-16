@@ -1,0 +1,409 @@
+setups:
+- symbol: BHARTIARTL
+  name: BHARTIARTL PDH Breakout
+  direction: LONG
+  setup_type: prior_day_breakout
+  trigger: 1871.1
+  entry_low: 1871.1
+  entry_high: 1874.3
+  stop_loss: 1843.13
+  target1: 1911.06
+  target2: 1951.02
+  invalidate: 1831.14
+  atr: 39.96
+  score: 87.0
+  reasons:
+  - Breakout above prior day high 1871.10
+  - ATR=39.96, Daily Trend=BULLISH
+  expiry_ist: '14:45'
+- symbol: AXISBANK
+  name: AXISBANK PDH Breakout
+  direction: LONG
+  setup_type: prior_day_breakout
+  trigger: 1293.8
+  entry_low: 1293.8
+  entry_high: 1295.86
+  stop_loss: 1275.77
+  target1: 1319.56
+  target2: 1345.32
+  invalidate: 1268.04
+  atr: 25.76
+  score: 85.0
+  reasons:
+  - Breakout above prior day high 1293.80
+  - ATR=25.76, Daily Trend=BULLISH
+  expiry_ist: '14:45'
+- symbol: BSE
+  name: BSE PDH Breakout
+  direction: LONG
+  setup_type: prior_day_breakout
+  trigger: 3445.0
+  entry_low: 3445.0
+  entry_high: 3453.83
+  stop_loss: 3367.71
+  target1: 3555.42
+  target2: 3665.84
+  invalidate: 3334.58
+  atr: 110.42
+  score: 82.0
+  reasons:
+  - Breakout above prior day high 3445.00
+  - ATR=110.42, Daily Trend=BULLISH
+  expiry_ist: '14:45'
+- symbol: COALINDIA
+  name: COALINDIA PDH Breakout
+  direction: LONG
+  setup_type: prior_day_breakout
+  trigger: 420.3
+  entry_low: 420.3
+  entry_high: 420.97
+  stop_loss: 414.48
+  target1: 428.62
+  target2: 436.94
+  invalidate: 411.98
+  atr: 8.32
+  score: 82.0
+  reasons:
+  - Breakout above prior day high 420.30
+  - ATR=8.32, Daily Trend=BULLISH
+  expiry_ist: '14:45'
+- symbol: DRREDDY
+  name: DRREDDY PDH Breakout
+  direction: LONG
+  setup_type: prior_day_breakout
+  trigger: 1234.2
+  entry_low: 1234.2
+  entry_high: 1236.31
+  stop_loss: 1215.73
+  target1: 1260.58
+  target2: 1286.96
+  invalidate: 1207.82
+  atr: 26.38
+  score: 79.0
+  reasons:
+  - Breakout above prior day high 1234.20
+  - ATR=26.38, Daily Trend=BULLISH
+  expiry_ist: '14:45'
+- symbol: EICHERMOT
+  name: EICHERMOT PDH Breakout
+  direction: LONG
+  setup_type: prior_day_breakout
+  trigger: 7270.5
+  entry_low: 7270.5
+  entry_high: 7282.4
+  stop_loss: 7166.4
+  target1: 7419.22
+  target2: 7567.94
+  invalidate: 7121.78
+  atr: 148.72
+  score: 74.0
+  reasons:
+  - Breakout above prior day high 7270.50
+  - ATR=148.72, Daily Trend=NEUTRAL
+  expiry_ist: '14:45'
+- symbol: BAJFINANCE
+  name: BAJFINANCE PDH Breakout
+  direction: LONG
+  setup_type: prior_day_breakout
+  trigger: 975.0
+  entry_low: 975.0
+  entry_high: 977.07
+  stop_loss: 956.92
+  target1: 1000.83
+  target2: 1026.66
+  invalidate: 949.17
+  atr: 25.83
+  score: 72.0
+  reasons:
+  - Breakout above prior day high 975.00
+  - ATR=25.83, Daily Trend=BEARISH
+  expiry_ist: '14:45'
+- symbol: BEL
+  name: BEL PDH Breakout
+  direction: LONG
+  setup_type: prior_day_breakout
+  trigger: 382.5
+  entry_low: 382.5
+  entry_high: 383.09
+  stop_loss: 377.32
+  target1: 389.9
+  target2: 397.3
+  invalidate: 375.1
+  atr: 7.4
+  score: 72.0
+  reasons:
+  - Breakout above prior day high 382.50
+  - ATR=7.40, Daily Trend=BEARISH
+  expiry_ist: '14:45'
+- symbol: ASIANPAINT
+  name: ASIANPAINT PDH Breakout
+  direction: LONG
+  setup_type: prior_day_breakout
+  trigger: 2398.4
+  entry_low: 2398.4
+  entry_high: 2402.39
+  stop_loss: 2363.49
+  target1: 2448.27
+  target2: 2498.14
+  invalidate: 2348.53
+  atr: 49.87
+  score: 69.0
+  reasons:
+  - Breakout above prior day high 2398.40
+  - ATR=49.87, Daily Trend=BEARISH
+  expiry_ist: '14:45'
+- symbol: BAJAJFINSV
+  name: BAJAJFINSV PDH Breakout
+  direction: LONG
+  setup_type: prior_day_breakout
+  trigger: 1746.1
+  entry_low: 1746.1
+  entry_high: 1749.17
+  stop_loss: 1719.28
+  target1: 1784.42
+  target2: 1822.74
+  invalidate: 1707.78
+  atr: 38.32
+  score: 69.0
+  reasons:
+  - Breakout above prior day high 1746.10
+  - ATR=38.32, Daily Trend=BEARISH
+  expiry_ist: '14:45'
+- symbol: ADANIENT
+  name: ADANIENT PDH Breakout
+  direction: LONG
+  setup_type: prior_day_breakout
+  trigger: 2717.5
+  entry_low: 2717.5
+  entry_high: 2724.0
+  stop_loss: 2660.64
+  target1: 2798.73
+  target2: 2879.96
+  invalidate: 2636.27
+  atr: 81.23
+  score: 67.0
+  reasons:
+  - Breakout above prior day high 2717.50
+  - ATR=81.23, Daily Trend=BEARISH
+  expiry_ist: '14:45'
+- symbol: ADANIPORTS
+  name: ADANIPORTS PDH Breakout
+  direction: LONG
+  setup_type: prior_day_breakout
+  trigger: 1761.9
+  entry_low: 1761.9
+  entry_high: 1765.46
+  stop_loss: 1730.72
+  target1: 1806.45
+  target2: 1851.0
+  invalidate: 1717.36
+  atr: 44.55
+  score: 67.0
+  reasons:
+  - Breakout above prior day high 1761.90
+  - ATR=44.55, Daily Trend=NEUTRAL
+  expiry_ist: '14:45'
+- symbol: BAJAJ-AUTO
+  name: BAJAJ-AUTO PDH Breakout
+  direction: LONG
+  setup_type: prior_day_breakout
+  trigger: 10405.0
+  entry_low: 10405.0
+  entry_high: 10425.58
+  stop_loss: 10224.9
+  target1: 10662.28
+  target2: 10919.56
+  invalidate: 10147.72
+  atr: 257.28
+  score: 67.0
+  reasons:
+  - Breakout above prior day high 10405.00
+  - ATR=257.28, Daily Trend=BEARISH
+  expiry_ist: '14:45'
+- symbol: APOLLOHOSP
+  name: APOLLOHOSP PDH Breakout
+  direction: LONG
+  setup_type: prior_day_breakout
+  trigger: 7966.5
+  entry_low: 7966.5
+  entry_high: 7983.56
+  stop_loss: 7817.23
+  target1: 8179.75
+  target2: 8393.0
+  invalidate: 7753.25
+  atr: 213.25
+  score: 66.0
+  reasons:
+  - Breakout above prior day high 7966.50
+  - ATR=213.25, Daily Trend=BEARISH
+  expiry_ist: '14:45'
+- symbol: AXISBANK
+  name: AXISBANK PDL Breakdown
+  direction: SHORT
+  setup_type: prior_day_breakdown
+  trigger: 1265.7
+  entry_low: 1263.64
+  entry_high: 1265.7
+  stop_loss: 1283.73
+  target1: 1239.94
+  target2: 1214.18
+  invalidate: 1291.46
+  atr: 25.76
+  score: 64.0
+  reasons:
+  - Breakdown below prior day low 1265.70
+  - ATR=25.76, Daily Trend=BULLISH
+  expiry_ist: '14:45'
+- symbol: BHARTIARTL
+  name: BHARTIARTL PDL Breakdown
+  direction: SHORT
+  setup_type: prior_day_breakdown
+  trigger: 1795.1
+  entry_low: 1791.9
+  entry_high: 1795.1
+  stop_loss: 1823.07
+  target1: 1755.14
+  target2: 1715.18
+  invalidate: 1835.06
+  atr: 39.96
+  score: 63.0
+  reasons:
+  - Breakdown below prior day low 1795.10
+  - ATR=39.96, Daily Trend=BULLISH
+  expiry_ist: '14:45'
+- symbol: CIPLA
+  name: CIPLA PDH Breakout
+  direction: LONG
+  setup_type: prior_day_breakout
+  trigger: 1336.4
+  entry_low: 1336.4
+  entry_high: 1338.48
+  stop_loss: 1318.24
+  target1: 1362.34
+  target2: 1388.28
+  invalidate: 1310.46
+  atr: 25.94
+  score: 61.0
+  reasons:
+  - Breakout above prior day high 1336.40
+  - ATR=25.94, Daily Trend=BEARISH
+  expiry_ist: '14:45'
+- symbol: DRREDDY
+  name: DRREDDY PDL Breakdown
+  direction: SHORT
+  setup_type: prior_day_breakdown
+  trigger: 1206.6
+  entry_low: 1204.49
+  entry_high: 1206.6
+  stop_loss: 1225.07
+  target1: 1180.22
+  target2: 1153.84
+  invalidate: 1232.98
+  atr: 26.38
+  score: 61.0
+  reasons:
+  - Breakdown below prior day low 1206.60
+  - ATR=26.38, Daily Trend=BULLISH
+  expiry_ist: '14:45'
+- symbol: BSE
+  name: BSE PDL Breakdown
+  direction: SHORT
+  setup_type: prior_day_breakdown
+  trigger: 3315.2
+  entry_low: 3306.37
+  entry_high: 3315.2
+  stop_loss: 3392.49
+  target1: 3204.78
+  target2: 3094.36
+  invalidate: 3425.62
+  atr: 110.42
+  score: 58.0
+  reasons:
+  - Breakdown below prior day low 3315.20
+  - ATR=110.42, Daily Trend=BULLISH
+  expiry_ist: '14:45'
+- symbol: COALINDIA
+  name: COALINDIA PDL Breakdown
+  direction: SHORT
+  setup_type: prior_day_breakdown
+  trigger: 415.05
+  entry_low: 414.38
+  entry_high: 415.05
+  stop_loss: 420.87
+  target1: 406.73
+  target2: 398.41
+  invalidate: 423.37
+  atr: 8.32
+  score: 58.0
+  reasons:
+  - Breakdown below prior day low 415.05
+  - ATR=8.32, Daily Trend=BULLISH
+  expiry_ist: '14:45'
+- symbol: EICHERMOT
+  name: EICHERMOT PDL Breakdown
+  direction: SHORT
+  setup_type: prior_day_breakdown
+  trigger: 7050.0
+  entry_low: 7038.1
+  entry_high: 7050.0
+  stop_loss: 7154.1
+  target1: 6901.28
+  target2: 6752.56
+  invalidate: 7198.72
+  atr: 148.72
+  score: 58.0
+  reasons:
+  - Breakdown below prior day low 7050.00
+  - ATR=148.72, Daily Trend=NEUTRAL
+  expiry_ist: '14:45'
+- symbol: ASIANPAINT
+  name: ASIANPAINT PDL Breakdown
+  direction: SHORT
+  setup_type: prior_day_breakdown
+  trigger: 2349.2
+  entry_low: 2345.21
+  entry_high: 2349.2
+  stop_loss: 2384.11
+  target1: 2299.33
+  target2: 2249.46
+  invalidate: 2399.07
+  atr: 49.87
+  score: 55.0
+  reasons:
+  - Breakdown below prior day low 2349.20
+  - ATR=49.87, Daily Trend=BEARISH
+  expiry_ist: '14:45'
+- symbol: BAJAJFINSV
+  name: BAJAJFINSV PDL Breakdown
+  direction: SHORT
+  setup_type: prior_day_breakdown
+  trigger: 1705.0
+  entry_low: 1701.93
+  entry_high: 1705.0
+  stop_loss: 1731.82
+  target1: 1666.68
+  target2: 1628.36
+  invalidate: 1743.32
+  atr: 38.32
+  score: 55.0
+  reasons:
+  - Breakdown below prior day low 1705.00
+  - ATR=38.32, Daily Trend=BEARISH
+  expiry_ist: '14:45'
+- symbol: CIPLA
+  name: CIPLA PDL Breakdown
+  direction: SHORT
+  setup_type: prior_day_breakdown
+  trigger: 1310.6
+  entry_low: 1308.52
+  entry_high: 1310.6
+  stop_loss: 1328.76
+  target1: 1284.66
+  target2: 1258.72
+  invalidate: 1336.54
+  atr: 25.94
+  score: 55.0
+  reasons:
+  - Breakdown below prior day low 1310.60
+  - ATR=25.94, Daily Trend=BEARISH
+  expiry_ist: '14:45'
