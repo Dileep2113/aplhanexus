@@ -418,7 +418,7 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>AlphaNexus - Institutional Quantitative Suite</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -447,7 +447,7 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
             --amber-border: #fde68a;
             --indigo: #4f46e5;
         }}
-        * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+        * {{ box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }}
         body {{
             font-family: 'Inter', -apple-system, sans-serif;
             background: var(--bg-base);
@@ -457,7 +457,7 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
             overflow: hidden;
             font-size: 0.88rem;
         }}
-        /* Left Sidebar */
+        /* Left Sidebar & Mobile Drawer */
         .sidebar {{
             width: 250px;
             background: var(--bg-sidebar);
@@ -466,9 +466,10 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
             flex-direction: column;
             flex-shrink: 0;
             box-shadow: 1px 0 2px rgba(0, 0, 0, 0.02);
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }}
         .brand {{
-            padding: 20px;
+            padding: 18px 20px;
             border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
@@ -487,6 +488,7 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
             font-size: 0.95rem;
             letter-spacing: -0.5px;
             box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+            flex-shrink: 0;
         }}
         .brand-name {{
             font-weight: 700;
@@ -500,6 +502,34 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
             text-transform: uppercase;
             letter-spacing: 0.6px;
             font-weight: 600;
+        }}
+        .mobile-close-btn {{
+            display: none;
+            background: transparent;
+            border: none;
+            color: var(--text-dimmed);
+            font-size: 1.3rem;
+            cursor: pointer;
+            margin-left: auto;
+            padding: 4px 8px;
+            line-height: 1;
+            border-radius: 4px;
+        }}
+        .sidebar-backdrop {{
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(3px);
+            z-index: 150;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+            pointer-events: none;
+        }}
+        .sidebar-backdrop.show {{
+            display: block;
+            opacity: 1;
+            pointer-events: auto;
         }}
         .nav-menu {{
             padding: 16px 10px;
@@ -561,6 +591,8 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
             flex-direction: column;
             overflow-y: auto;
             background: var(--bg-base);
+            width: 100%;
+            min-width: 0;
         }}
         /* Header Topbar */
         .topbar {{
@@ -574,6 +606,30 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
             top: 0;
             z-index: 50;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+            gap: 12px;
+        }}
+        .mobile-toggle-btn {{
+            display: none;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 6px 9px;
+            border-radius: 6px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+        }}
+        .mobile-brand-title {{
+            display: none;
+            align-items: center;
+            gap: 8px;
+        }}
+        .topbar-actions {{
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
         }}
         .ticker-strip {{
             display: flex;
@@ -589,6 +645,7 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
             display: flex;
             align-items: center;
             gap: 8px;
+            flex-shrink: 0;
         }}
         .ticker-lbl {{ color: var(--text-dimmed); font-weight: 600; }}
         .ticker-num {{ font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--text-main); }}
@@ -607,6 +664,7 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
             gap: 6px;
             transition: all 0.15s;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+            white-space: nowrap;
         }}
         .btn:hover {{
             border-color: #94a3b8;
@@ -635,6 +693,7 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
             font-weight: 600;
             cursor: pointer;
             transition: all 0.15s;
+            white-space: nowrap;
         }}
         .btn-action:hover {{
             background: #2563eb;
@@ -677,18 +736,22 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
             font-family: 'JetBrains Mono', monospace;
             color: var(--text-main);
         }}
-        /* Tables */
+        /* Tables & Responsive Sticky Columns */
         .table-panel {{
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 8px;
             overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            position: relative;
         }}
         table {{
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
             text-align: left;
+            white-space: nowrap;
         }}
         thead th {{
             background: #f8fafc;
@@ -708,6 +771,22 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
         }}
         tbody tr:hover {{ background: var(--bg-card-hover); }}
         tbody tr:last-child td {{ border-bottom: none; }}
+        /* Sticky First Column for Horizontal Table Swiping */
+        .table-panel table thead th:first-child,
+        .table-panel table tbody td:first-child {{
+            position: sticky;
+            left: 0;
+            background: #ffffff;
+            z-index: 2;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.04);
+        }}
+        .table-panel table thead th:first-child {{
+            background: #f8fafc;
+            z-index: 3;
+        }}
+        .table-panel table tbody tr:hover td:first-child {{
+            background: var(--bg-card-hover);
+        }}
         /* Pills & Badges */
         .pill {{
             padding: 3px 9px;
@@ -716,6 +795,7 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
             font-weight: 600;
             display: inline-block;
             font-family: 'Inter', sans-serif;
+            white-space: nowrap;
         }}
         .pill-long {{ background: var(--green-tint); color: #047857; border: 1px solid var(--green-border); }}
         .pill-short {{ background: var(--red-tint); color: #b91c1c; border: 1px solid var(--red-border); }}
@@ -741,59 +821,200 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
             align-items: center;
             justify-content: center;
             z-index: 1000;
+            padding: 12px;
         }}
         .modal-box {{
             background: #ffffff;
             border: 1px solid #cbd5e1;
             border-radius: 10px;
-            width: 90%;
+            width: 92%;
             max-width: 600px;
+            max-height: 88vh;
+            overflow-y: auto;
             padding: 24px;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+        }}
+        /* Filter Controls & Horizontal Chip Container */
+        .filter-chip-row {{
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            padding-bottom: 2px;
+        }}
+        .filter-chip-row::-webkit-scrollbar {{ display: none; }}
+        /* Bottom Navigation Bar for Mobile */
+        .bottom-nav {{
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border-top: 1px solid var(--border);
+            height: 60px;
+            z-index: 95;
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.04);
+        }}
+        .bottom-nav-item {{
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            color: #64748b;
+            padding: 6px 0;
+            cursor: pointer;
+            transition: color 0.15s;
+            gap: 3px;
+            text-decoration: none;
+            font-family: inherit;
+        }}
+        .bottom-nav-item.active {{
+            color: #2563eb;
+            font-weight: 600;
+        }}
+        .bottom-nav-icon {{
+            font-size: 1.15rem;
+            line-height: 1;
+        }}
+        .bottom-nav-lbl {{
+            font-size: 0.65rem;
+            letter-spacing: -0.2px;
+        }}
+
+        /* Responsive Breakpoints */
+        @media (max-width: 900px) {{
+            .sidebar {{
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                width: 270px;
+                z-index: 200;
+                transform: translateX(-100%);
+                box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
+            }}
+            .sidebar.open {{
+                transform: translateX(0);
+            }}
+            .mobile-close-btn {{
+                display: block;
+            }}
+            .mobile-toggle-btn {{
+                display: flex;
+            }}
+            .mobile-brand-title {{
+                display: flex;
+            }}
+            .topbar {{
+                padding: 10px 14px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }}
+            .ticker-strip {{
+                order: 3;
+                width: 100%;
+                overflow-x: auto;
+                white-space: nowrap;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                padding-bottom: 2px;
+            }}
+            .ticker-strip::-webkit-scrollbar {{ display: none; }}
+            .panel {{
+                padding: 14px;
+            }}
+            .bottom-nav {{
+                display: flex;
+            }}
+            .main-viewport {{
+                padding-bottom: 70px;
+            }}
+        }}
+
+        @media (max-width: 640px) {{
+            .metrics-grid {{
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+                margin-bottom: 14px;
+            }}
+            .metric-card {{
+                padding: 12px;
+            }}
+            .metric-card-lbl {{
+                font-size: 0.68rem;
+            }}
+            .metric-card-val {{
+                font-size: 1.25rem;
+            }}
+            .btn {{
+                padding: 6px 10px;
+                font-size: 0.78rem;
+            }}
+            .topbar-actions .btn {{
+                padding: 5px 8px;
+                font-size: 0.75rem;
+            }}
+            .modal-box {{
+                width: 95%;
+                padding: 16px;
+                max-height: 85vh;
+            }}
+        }}
     </style>
 </head>
 <body>
 
+    <!-- Backdrop for Mobile Drawer -->
+    <div id="sidebar-backdrop" class="sidebar-backdrop" onclick="toggleSidebar(false)"></div>
+
     <!-- Left Sidebar -->
-    <aside class="sidebar">
+    <aside class="sidebar" id="app-sidebar">
         <div class="brand">
             <div class="brand-badge">AN</div>
             <div>
                 <div class="brand-name">AlphaNexus</div>
                 <div class="brand-sub">Quantitative Suite</div>
             </div>
+            <button class="mobile-close-btn" onclick="toggleSidebar(false)" aria-label="Close navigation">&times;</button>
         </div>
 
         <div class="nav-menu">
             <div class="nav-category">Live Desk</div>
-            <button class="nav-btn active" onclick="switchTab('tab-intraday')">
+            <button class="nav-btn active" data-tab="tab-intraday" onclick="switchTab('tab-intraday')">
                 <span>🎯</span> Intraday Desk
                 <span class="nav-count">{len(intraday)}</span>
             </button>
-            <button class="nav-btn" onclick="switchTab('tab-longterm')">
+            <button class="nav-btn" data-tab="tab-longterm" onclick="switchTab('tab-longterm')">
                 <span>🏛️</span> Long-Term Portfolio
                 <span class="nav-count">{len(longterm)}</span>
             </button>
 
             <div class="nav-category">Market Intelligence</div>
-            <button class="nav-btn" onclick="switchTab('tab-premarket')">
+            <button class="nav-btn" data-tab="tab-premarket" onclick="switchTab('tab-premarket')">
                 <span>🌅</span> Pre-Market Scenarios
             </button>
-            <button class="nav-btn" onclick="switchTab('tab-research')">
+            <button class="nav-btn" data-tab="tab-research" onclick="switchTab('tab-research')">
                 <span>🔍</span> Stock Deep Dive
             </button>
 
             <div class="nav-category">Quant & Governance</div>
-            <button class="nav-btn" onclick="switchTab('tab-evening')">
+            <button class="nav-btn" data-tab="tab-evening" onclick="switchTab('tab-evening')">
                 <span>📈</span> Post-Market Audit
             </button>
-            <button class="nav-btn" onclick="switchTab('tab-learning')">
+            <button class="nav-btn" data-tab="tab-learning" onclick="switchTab('tab-learning')">
                 <span>🧠</span> Model Self-Learning
             </button>
-            <button class="nav-btn" onclick="switchTab('tab-scheduler')">
+            <button class="nav-btn" data-tab="tab-scheduler" onclick="switchTab('tab-scheduler')">
                 <span>⚙️</span> Automation & Timers
             </button>
-            <button class="nav-btn" onclick="switchTab('tab-archive')">
+            <button class="nav-btn" data-tab="tab-archive" onclick="switchTab('tab-archive')">
                 <span>📁</span> Reports Vault
             </button>
         </div>
@@ -809,6 +1030,16 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
 
         <!-- Top Status Bar -->
         <header class="topbar">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="mobile-toggle-btn" onclick="toggleSidebar(true)" aria-label="Open Navigation">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                </button>
+                <div class="mobile-brand-title">
+                    <div class="brand-badge" style="width:28px; height:28px; font-size:0.85rem;">AN</div>
+                    <div style="font-weight:700; font-size:1rem; color:var(--text-main); letter-spacing:-0.2px;">AlphaNexus</div>
+                </div>
+            </div>
+
             <div class="ticker-strip">
                 <div class="ticker-cell">
                     <span class="ticker-lbl">NIFTY 50</span>
@@ -830,10 +1061,10 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
                 </div>
             </div>
 
-            <div style="display:flex; gap:8px;">
-                <button class="btn btn-primary" onclick="showScanModal()">⚡ Scan Universe</button>
-                <button class="btn" onclick="triggerJob('morning_report')">🌅 Morning</button>
-                <button class="btn" onclick="triggerJob('evening_review')">📊 Evening</button>
+            <div class="topbar-actions">
+                <button class="btn btn-primary" onclick="showScanModal()">⚡ Scan</button>
+                <button class="btn" onclick="triggerJob('morning_report')">🌅 AM</button>
+                <button class="btn" onclick="triggerJob('evening_review')">📊 PM</button>
             </div>
         </header>
 
@@ -860,14 +1091,14 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
             </div>
 
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:10px; flex-wrap:wrap;">
-                <div style="display:flex; gap:6px;">
+                <div class="filter-chip-row">
                     <button class="btn" onclick="filterIntraday('ALL', this)" style="background:#eff6ff; border-color:#3b82f6; color:#1d4ed8; font-weight:600;">All Setups ({len(intraday)})</button>
                     <button class="btn" onclick="filterIntraday('LONG', this)">🟢 Long (Buy)</button>
                     <button class="btn" onclick="filterIntraday('SHORT', this)">🔴 Short (Sell)</button>
                     <button class="btn" onclick="filterIntraday('STRONG', this)">⭐ High Conviction Only</button>
                 </div>
-                <div>
-                    <input type="text" id="intraday-search" placeholder="Search ticker..." onkeyup="searchIntraday()" style="padding:6px 12px; font-size:0.82rem; width:190px; background:#ffffff; border:1px solid #cbd5e1; color:#0f172a; border-radius:6px;">
+                <div style="flex-shrink:0;">
+                    <input type="text" id="intraday-search" placeholder="Search ticker..." onkeyup="searchIntraday()" style="padding:6px 12px; font-size:0.82rem; width:160px; background:#ffffff; border:1px solid #cbd5e1; color:#0f172a; border-radius:6px;">
                 </div>
             </div>
 
@@ -914,7 +1145,7 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
                 </div>
             </div>
 
-            <div style="display:flex; gap:6px; margin-bottom:12px;">
+            <div class="filter-chip-row" style="margin-bottom:12px;">
                 <button class="btn" onclick="filterLongterm('ALL', this)" style="background:#eff6ff; border-color:#3b82f6; color:#1d4ed8; font-weight:600;">All Opportunities</button>
                 <button class="btn" onclick="filterLongterm('STRONG BUY', this)">💎 Strong Buy</button>
                 <button class="btn" onclick="filterLongterm('ACCUMULATE', this)">📈 Accumulate</button>
@@ -1112,11 +1343,32 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
     </div>
 
     <script>
+        function toggleSidebar(forceOpen) {{
+            const sidebar = document.getElementById('app-sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            if (!sidebar || !backdrop) return;
+            const isOpen = sidebar.classList.contains('open');
+            const open = forceOpen !== undefined ? forceOpen : !isOpen;
+            if (open) {{
+                sidebar.classList.add('open');
+                backdrop.classList.add('show');
+                document.body.style.overflow = 'hidden';
+            }} else {{
+                sidebar.classList.remove('open');
+                backdrop.classList.remove('show');
+                document.body.style.overflow = '';
+            }}
+        }}
+
         function switchTab(tabId) {{
             document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            event.target.classList.add('active');
+            document.querySelectorAll('.nav-btn, .bottom-nav-item').forEach(b => b.classList.remove('active'));
+            const targetPanel = document.getElementById(tabId);
+            if (targetPanel) targetPanel.classList.add('active');
+
+            document.querySelectorAll(`[data-tab="${{tabId}}"]`).forEach(b => b.classList.add('active'));
+
+            toggleSidebar(false);
 
             if (tabId === 'tab-scheduler') fetchSchedulerStatuses();
             if (tabId === 'tab-archive') loadReportsArchive();
@@ -1371,6 +1623,29 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
             }}
         }}
     </script>
+    <!-- Bottom Navigation Bar for Mobile -->
+    <nav class="bottom-nav">
+        <button class="bottom-nav-item active" data-tab="tab-intraday" onclick="switchTab('tab-intraday')">
+            <span class="bottom-nav-icon">🎯</span>
+            <span class="bottom-nav-lbl">Intraday</span>
+        </button>
+        <button class="bottom-nav-item" data-tab="tab-longterm" onclick="switchTab('tab-longterm')">
+            <span class="bottom-nav-icon">🏛️</span>
+            <span class="bottom-nav-lbl">Portfolio</span>
+        </button>
+        <button class="bottom-nav-item" data-tab="tab-premarket" onclick="switchTab('tab-premarket')">
+            <span class="bottom-nav-icon">🌅</span>
+            <span class="bottom-nav-lbl">Pre-Market</span>
+        </button>
+        <button class="bottom-nav-item" data-tab="tab-research" onclick="switchTab('tab-research')">
+            <span class="bottom-nav-icon">🔍</span>
+            <span class="bottom-nav-lbl">Research</span>
+        </button>
+        <button class="bottom-nav-item" onclick="toggleSidebar(true)">
+            <span class="bottom-nav-icon">☰</span>
+            <span class="bottom-nav-lbl">More</span>
+        </button>
+    </nav>
 </body>
 </html>"""
 
