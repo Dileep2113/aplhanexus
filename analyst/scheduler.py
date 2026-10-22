@@ -87,12 +87,28 @@ class BackgroundScheduler:
         return {"status": "TRIGGERED", "job_name": job_name, "message": "Job initiated in background."}
 
     def get_job_statuses(self) -> Dict[str, Any]:
-        """Query current status and computed next runs of all scheduled jobs."""
+        """Query current status, computed next runs, and execution logs of all scheduled jobs."""
         now_ist = datetime.now(IST)
         next_runs = self._compute_next_runs(now_ist)
         with get_db_connection(self.db_path) as conn:
+            # Ensure execution log table exists
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS scheduler_execution_logs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    job_name TEXT NOT NULL,
+                    executed_at TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    duration_seconds REAL,
+                    message TEXT
+                )
+            """)
             rows = conn.execute("SELECT * FROM scheduler_jobs").fetchall()
             row_map = {r["job_name"]: dict(r) for r in rows}
+
+            history_rows = conn.execute(
+                "SELECT * FROM scheduler_execution_logs ORDER BY executed_at DESC LIMIT 20"
+            ).fetchall()
+            history = [dict(h) for h in history_rows]
 
         jobs = {}
         job_catalog = [
@@ -113,7 +129,7 @@ class BackgroundScheduler:
                 "last_duration_seconds": db_entry.get("last_duration_seconds"),
                 "last_message": db_entry.get("last_message", "Scheduled and ready"),
             }
-        return jobs
+        return {"jobs": jobs, "history": history}
 
     def _compute_next_runs(self, now: datetime) -> Dict[str, str]:
         """Calculate the next estimated execution timestamp in IST for each job."""
@@ -229,10 +245,38 @@ class BackgroundScheduler:
         msg = "Job completed successfully."
 
         try:
-            handler()
+            res = handler()
+            if isinstance(res, str) and res:
+                msg = res
+            elif job_name == "morning_report":
+                if hasattr(res, "ranked_longs") and hasattr(res, "ranked_shorts"):
+                    n_l = len(res.ranked_longs or [])
+                    n_s = len(res.ranked_shorts or [])
+                    regime = getattr(res, "market_regime", "NEUTRAL")
+                    msg = f"🌅 Morning briefing published: {n_l} Longs, {n_s} Shorts ranked. Macro Regime: {regime}."
+                elif isinstance(res, tuple) and len(res) >= 1:
+                    msg = "🌅 Morning pre-market scan complete: Dual-table analysis and roadmaps generated."
+                else:
+                    msg = "🌅 Morning pre-market briefing published successfully."
+            elif job_name == "intraday_scan":
+                msg = "🎯 Intraday universe scan complete: Qualified setups and live execution levels refreshed."
+            elif job_name == "evening_review":
+                if hasattr(res, "total_predictions"):
+                    msg = f"📊 Post-market audit complete: {res.total_predictions} trades evaluated ({res.win_count}W / {res.loss_count}L, {res.ambiguous_count} Ambiguous). Net P&L: ₹{res.net_pnl_sum:,.2f}."
+                else:
+                    msg = "📊 Post-market P&L settlement audit and failure diagnosis completed."
+            elif job_name == "learning_cycle":
+                if hasattr(res, "decision"):
+                    metrics = getattr(res, "walk_forward_metrics", {})
+                    sharpe = metrics.get("sharpe_ratio", 0)
+                    msg = f"🤖 Strategy learning cycle: Candidate {res.candidate_strategy_version} {res.decision} (Sharpe {sharpe:.2f})."
+                else:
+                    msg = "🤖 Strategy self-learning & walk-forward optimizer cycle executed."
+            elif job_name == "retention_reaper":
+                msg = "🧹 Storage retention policy applied: Expired historical snapshots pruned."
         except Exception as e:
             status = "ERROR"
-            msg = str(e)
+            msg = f"Execution failed: {e}"
             logger.error(f"Error executing job '{job_name}': {e}", exc_info=True)
 
         duration = round(time.time() - start_time, 2)
@@ -243,3 +287,20 @@ class BackgroundScheduler:
                     last_duration_seconds, last_message
                 ) VALUES (?, ?, ?, ?, ?, ?)
             """, (job_name, start_iso, None, status, duration, msg))
+
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS scheduler_execution_logs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    job_name TEXT NOT NULL,
+                    executed_at TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    duration_seconds REAL,
+                    message TEXT
+                )
+            """)
+            conn.execute("""
+                INSERT INTO scheduler_execution_logs (
+                    job_name, executed_at, status, duration_seconds, message
+                ) VALUES (?, ?, ?, ?, ?)
+            """, (job_name, start_iso, status, duration, msg))
+

@@ -27,7 +27,13 @@ from analyst.global_macro import fetch_global_snapshot
 from analyst.longterm import evaluate_longterm_candidate
 from analyst.news import NewsReport, fetch_news
 from analyst.storage import StorageManager, compute_sha256
-from analyst.technicals import TechnicalProfile, analyse_symbol
+from analyst.technicals import (
+    TechnicalProfile, analyse_symbol,
+    compute_pivots, detect_wyckoff_phase, compute_wyckoff_volume_ratio,
+    detect_fvg, detect_bos_choch, detect_demand_zone,
+    detect_rsi_divergence, compute_ema_variances,
+)
+from analyst.gann import compute_gann_square9
 
 
 @dataclass
@@ -48,8 +54,17 @@ class StockResearchDossier:
     catalysts: List[Dict[str, Any]]
     short_term_outlook: str
     long_term_outlook: str
+    # ── SEBI Quant Engine extensions ──────────────────────────────────────────
+    gann_matrix: Dict[str, Any] = field(default_factory=dict)          # Section 4
+    wyckoff_smc: Dict[str, Any] = field(default_factory=dict)          # Section 2
+    forensic_audit: Dict[str, Any] = field(default_factory=dict)       # Section 3
+    smart_money: Dict[str, Any] = field(default_factory=dict)          # Section 5
+    trade_directive: Dict[str, Any] = field(default_factory=dict)      # Section 6
+    entry_price: Optional[float] = None                                # user input
+    allocation_pct: Optional[float] = None                             # user input
     html_path: Optional[str] = None
     checksum: Optional[str] = None
+
 
 
 class StockResearcher:
@@ -59,7 +74,9 @@ class StockResearcher:
         self.db_path = Path(db_path)
         self.storage = storage_manager or StorageManager()
 
-    def research_symbol(self, symbol: str, force_refresh: bool = False) -> StockResearchDossier:
+    def research_symbol(self, symbol: str, force_refresh: bool = False,
+                        entry_price: Optional[float] = None,
+                        allocation_pct: Optional[float] = None) -> StockResearchDossier:
         """Conduct or load cached deep research for a symbol."""
         clean_sym = symbol.strip().upper()
         if not clean_sym.endswith(".NS") and not clean_sym.startswith("^"):
@@ -162,6 +179,192 @@ class StockResearcher:
             f"({valuation_triad['base_case']['upside_pct']:+.1f}% vs current price)."
         )
 
+        # ── SEBI Quant Engine: extract daily bar lists for extended analysis ──
+        _closes: list[float] = []
+        _highs:  list[float] = []
+        _lows:   list[float] = []
+        _vols:   list[float] = []
+        try:
+            import yfinance as yf
+            import warnings
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                _ticker = yf.Ticker(clean_sym)
+                _daily_df = _ticker.history(period="200d", interval="1d")
+                if _daily_df is not None and len(_daily_df) >= 5:
+                    if hasattr(_daily_df.columns, 'levels'):
+                        _daily_df.columns = _daily_df.columns.droplevel(1)
+                    _closes = list(_daily_df["Close"].astype(float))
+                    _highs  = list(_daily_df["High"].astype(float))
+                    _lows   = list(_daily_df["Low"].astype(float))
+                    _vols   = list(_daily_df["Volume"].astype(float))
+        except Exception:
+            pass  # gracefully degrade — quant fields will be empty
+
+        # Section 4: Gann Square of 9 Matrix
+        gann_matrix: Dict[str, Any] = {}
+        try:
+            gann_matrix = compute_gann_square9(ltp)
+        except Exception:
+            gann_matrix = {"error": "CMP invalid for Gann computation"}
+
+        # Section 1: EMA/SMA Variance Audit
+        ema_variances = compute_ema_variances(_closes, ltp) if _closes else {}
+
+        # Section 1: OCF/PAT Ratio (Earnings Quality)
+        ocf_pat_ratio: Optional[float] = None
+        try:
+            import yfinance as yf
+            _tk2 = yf.Ticker(clean_sym)
+            fin = _tk2.financials
+            if fin is not None and not fin.empty:
+                net_income_row = [r for r in fin.index if "Net Income" in str(r)]
+                if net_income_row:
+                    pat_val = float(fin.loc[net_income_row[0]].iloc[0])
+                    if pat_val and pat_val != 0:
+                        # Convert to Cr (yfinance returns in native currency units)
+                        ocf_cr_raw = (comp.operating_cashflow_cr or 0.0) * 1e7  # back to raw
+                        ocf_pat_ratio = round(ocf_cr_raw / pat_val, 2) if pat_val else None
+        except Exception:
+            ocf_pat_ratio = None
+
+        # Section 2: Wyckoff Blueprint & SMC Architecture
+        wyckoff_phase = detect_wyckoff_phase(_closes, _vols) if len(_closes) >= 50 else "INSUFFICIENT DATA"
+        vol_ratio     = compute_wyckoff_volume_ratio(_vols) if _vols else 1.0
+        fvg_data      = detect_fvg(_highs, _lows) if _highs else {}
+        bos_choch     = detect_bos_choch(_closes, _highs, _lows) if len(_closes) >= 20 else {}
+        demand_zone   = detect_demand_zone(_lows, _vols) if _lows else {}
+        rsi_div       = detect_rsi_divergence(_closes) if len(_closes) >= 30 else False
+
+        # Daily Pivot Levels
+        pivots: Dict[str, Any] = {}
+        if len(_highs) >= 2 and len(_lows) >= 2 and len(_closes) >= 2:
+            pivots = compute_pivots(_highs[-2], _lows[-2], _closes[-2])
+
+        # 10-day & 30-day average volume
+        avg_vol_10  = round(sum(_vols[-10:]) / 10, 0) if len(_vols) >= 10 else None
+        avg_vol_30  = round(sum(_vols[-30:]) / 30, 0) if len(_vols) >= 30 else None
+
+        wyckoff_smc: Dict[str, Any] = {
+            # Liquidity Vector
+            "cmp": round(ltp, 2),
+            "high_52w": round(comp.high_52w or ltp * 1.2, 2) if comp else None,
+            "low_52w":  round(comp.low_52w  or ltp * 0.8, 2) if comp else None,
+            "daily_r1": pivots.get("r1"),
+            "daily_s1": pivots.get("s1"),
+            "daily_r2": pivots.get("r2"),
+            "daily_s2": pivots.get("s2"),
+            "pivot":    pivots.get("pivot"),
+            "avg_vol_10d": avg_vol_10,
+            "avg_vol_30d": avg_vol_30,
+            "delivery_vol_pct": "[NSE Bhavcopy — Not available via yfinance]",
+            # Trend Coordinates
+            "ema_20":  round(tech.daily.ema20,  2) if tech and tech.daily and tech.daily.ema20  else None,
+            "ema_50":  round(tech.daily.ema50,  2) if tech and tech.daily and tech.daily.ema50  else None,
+            "ema_200": round(tech.daily.ema200, 2) if tech and tech.daily and tech.daily.ema200 else None,
+            "rsi_14":  round(tech.daily.rsi, 2) if tech and tech.daily and tech.daily.rsi else None,
+            "class_a_divergence": rsi_div,
+            "ema20_variance_pct": ema_variances.get("ema20_variance_pct"),
+            "sma50_variance_pct": ema_variances.get("sma50_variance_pct"),
+            "sma100_variance_pct": ema_variances.get("sma100_variance_pct"),
+            "sma200_variance_pct": ema_variances.get("sma200_variance_pct"),
+            # Wyckoff Blueprint
+            "wyckoff_phase": wyckoff_phase,
+            "breakout_vol_ratio": vol_ratio,
+            # SMC Architecture
+            "bullish_fvg_lower": fvg_data.get("bullish_fvg_lower"),
+            "bullish_fvg_upper": fvg_data.get("bullish_fvg_upper"),
+            "fvg_detected":      fvg_data.get("fvg_detected", False),
+            "demand_zone_lower": demand_zone.get("demand_zone_lower"),
+            "demand_zone_upper": demand_zone.get("demand_zone_upper"),
+            "bos_level": bos_choch.get("bos_level"),
+            "bos_type":  bos_choch.get("bos_type"),
+            "choch_level": bos_choch.get("choch_level"),
+            "choch_type":  bos_choch.get("choch_type"),
+        }
+
+        # Section 3: Forensic Audit
+        _pe  = comp.pe_ratio if comp and comp.pe_ratio and comp.pe_ratio > 0 else None
+        _roe = comp.roe if comp and comp.roe else None
+        _de  = comp.debt_to_equity if comp and comp.debt_to_equity else None
+        _ocf = comp.operating_cashflow_cr if comp and comp.operating_cashflow_cr else 0.0
+        _ebitda_est = abs(_ocf) * 1.15 if _ocf else None  # rough proxy: OCF ≈ 87% EBITDA
+
+        earnings_realization_idx = round(_ocf / _ebitda_est, 2) if (_ebitda_est and _ebitda_est != 0) else None
+
+        forensic_audit: Dict[str, Any] = {
+            # Efficiency & Leverage
+            "pe_ratio":       round(_pe, 2) if _pe else "N/A",
+            "sector_pe":      "[Sector P/E requires market data subscription]",
+            "pb_ratio":       round(comp.pb_ratio, 2) if comp and comp.pb_ratio else "N/A",
+            "debt_to_equity": round(_de, 2) if _de else "N/A",
+            "roe_pct":        round((_roe or 0.0) * 100.0, 2) if _roe else "N/A",
+            "roce_pct":       "[ROCE — Requires EBIT from financials API]",
+            # Earnings Quality Audit
+            "revenue_yoy_growth_pct": "[Requires quarterly financials — Not available via yfinance free tier]",
+            "operating_profit_margin_pct": round((comp.operating_margin or 0.0) * 100.0, 2) if comp and comp.operating_margin else "N/A",
+            "ocf_pat_ratio":  ocf_pat_ratio if ocf_pat_ratio is not None else "[PAT derivation failed — use screener.in]",
+            "earnings_realization_idx": earnings_realization_idx,
+            "ocf_cr":         round(_ocf, 2),
+            # Vulnerability Check
+            "promoter_pledging_pct": "[Exact pledge % requires NSE LODR filings — see BSE/NSE shareholding disclosure]",
+            "working_capital_days":  "[Requires balance sheet line items — Not available via yfinance free tier]",
+            "fx_exposure_risk":      "Low",  # default — update if company has significant forex revenue
+        }
+
+        # Section 5: Smart Money Flow
+        smart_money: Dict[str, Any] = {
+            "fpi_net_change_qoq":  "[FPI flow data requires SEBI/NSE institutional flow subscription]",
+            "dii_net_change_qoq":  "[DII/Mutual Fund flow data requires AMFI API integration]",
+            "block_deal_summary":  "[Block deal data requires NSE bulk/block deals endpoint]",
+            "screener_intel":      "Check screener.in and trendlyne.com for independent institutional annotations.",
+            "smart_money_note":    "Monitor delivery volume % via NSE Bhavcopy for institutional vs retail split.",
+        }
+
+        # Section 6: Trade Directive
+        _rsi_val   = tech.daily.rsi if tech and tech.daily and tech.daily.rsi else 50.0
+        _trend_str = tech.daily.trend if tech and tech.daily else "NEUTRAL"
+        _adx_val   = tech.daily.adx if tech and tech.daily and tech.daily.adx else 20.0
+        _base_fv   = valuation_triad.get("base_case", {}).get("fair_value", ltp)
+
+        # Derive trade signal
+        if _trend_str == "BULLISH" and _rsi_val > 55 and _adx_val > 20:
+            _signal = "BUY"
+            _bias   = "BULLISH"
+            _category = "Trend-Following Momentum"
+        elif _trend_str == "BEARISH" and _rsi_val < 45:
+            _signal = "REDUCE"
+            _bias   = "BEARISH"
+            _category = "Defensive Capital Preservation"
+        elif 45 <= _rsi_val <= 55:
+            _signal = "HOLD"
+            _bias   = "NEUTRAL-COMPRESSED"
+            _category = "Consolidation Observation"
+        else:
+            _signal = "HOLD"
+            _bias   = "NEUTRAL-COMPRESSED"
+            _category = "Watchlist — Await Confirmation"
+
+        # Risk-Reward from entry
+        _rr = None
+        if entry_price and entry_price > 0:
+            risk   = abs(entry_price - gann_matrix.get("invalidation_floor", entry_price * 0.95))
+            reward = abs(_base_fv - entry_price)
+            _rr    = round(reward / risk, 2) if risk > 0 else None
+
+        trade_directive: Dict[str, Any] = {
+            "setup_category":    _category,
+            "trade_call":        f"{_signal} — {_trend_str} posture with RSI {_rsi_val:.1f} and ADX {_adx_val:.1f}",
+            "swing_signal":      _signal,
+            "value_bias":        _bias,
+            "entry_price":       entry_price,
+            "allocation_pct":    allocation_pct,
+            "gann_stop":         gann_matrix.get("invalidation_floor"),
+            "gann_t1_target":    gann_matrix.get("t1_price"),
+            "gann_t2_target":    gann_matrix.get("t2_price"),
+            "risk_reward_ratio": _rr,
+        }
+
         dossier = StockResearchDossier(
             symbol=clean_sym,
             company_name=name,
@@ -179,6 +382,13 @@ class StockResearcher:
             catalysts=catalysts_list,
             short_term_outlook=short_term_outlook,
             long_term_outlook=long_term_outlook,
+            gann_matrix=gann_matrix,
+            wyckoff_smc=wyckoff_smc,
+            forensic_audit=forensic_audit,
+            smart_money=smart_money,
+            trade_directive=trade_directive,
+            entry_price=entry_price,
+            allocation_pct=allocation_pct,
         )
 
         # Generate HTML Dossier and Save

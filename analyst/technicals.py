@@ -611,6 +611,196 @@ def batch_analyse_symbols(yahoo_symbols: list[str], chunk_size: int = 80) -> dic
 
 
 # ---------------------------------------------------------------------------
+# SEBI Quant Engine — Extended Indicator Suite
+# ---------------------------------------------------------------------------
+
+def _sma_series(closes: list[float], period: int) -> list[Optional[float]]:
+    """Return simple moving average series, None until period bars are available."""
+    if len(closes) < period:
+        return [None] * len(closes)
+    result: list[Optional[float]] = [None] * (period - 1)
+    for i in range(period - 1, len(closes)):
+        result.append(round(sum(closes[i - period + 1: i + 1]) / period, 2))
+    return result
+
+
+def compute_pivots(prev_high: float, prev_low: float, prev_close: float) -> dict:
+    """Standard floor pivot point levels (Classic formula).
+
+    Returns R1, R2, S1, S2, and the pivot point itself.
+    """
+    pivot = round((prev_high + prev_low + prev_close) / 3.0, 2)
+    r1 = round(2 * pivot - prev_low, 2)
+    r2 = round(pivot + (prev_high - prev_low), 2)
+    s1 = round(2 * pivot - prev_high, 2)
+    s2 = round(pivot - (prev_high - prev_low), 2)
+    return {"pivot": pivot, "r1": r1, "r2": r2, "s1": s1, "s2": s2}
+
+
+def detect_wyckoff_phase(closes: list[float], volumes: list[float]) -> str:
+    """Classify current Wyckoff market phase from daily OHLCV data."""
+    if len(closes) < 50:
+        return "INSUFFICIENT DATA"
+
+    sma200_series = _sma_series(closes, min(200, len(closes)))
+    sma50_series  = _sma_series(closes, min(50, len(closes)))
+    sma200 = next((v for v in reversed(sma200_series) if v is not None), None)
+    sma50  = next((v for v in reversed(sma50_series) if v is not None), None)
+
+    ltp = closes[-1]
+    recent_closes = closes[-20:]
+    recent_vols   = volumes[-20:] if len(volumes) >= 20 else volumes
+
+    avg_vol_recent = sum(recent_vols) / len(recent_vols) if recent_vols else 1
+    avg_vol_prior  = sum(volumes[-40:-20]) / 20 if len(volumes) >= 40 else avg_vol_recent
+    vol_expanding  = avg_vol_recent > avg_vol_prior * 1.1
+
+    price_range_recent = max(recent_closes) - min(recent_closes)
+    price_range_prior  = (max(closes[-40:-20]) - min(closes[-40:-20])) if len(closes) >= 40 else price_range_recent
+    range_narrowing    = price_range_recent < price_range_prior * 0.85
+
+    above_sma200 = (sma200 is not None and ltp > sma200)
+    above_sma50  = (sma50 is not None and ltp > sma50)
+    price_rising = ltp > closes[-10] if len(closes) >= 10 else True
+
+    if above_sma200 and above_sma50 and vol_expanding and price_rising:
+        return "Stage 2 Markup"
+    if above_sma200 and (range_narrowing or not price_rising):
+        return "Stage 3 Distribution"
+    if not above_sma200 and not price_rising and vol_expanding:
+        return "Stage 4 Markdown"
+    return "Stage 1 Accumulation"
+
+
+def compute_wyckoff_volume_ratio(volumes: list[float]) -> float:
+    """Breakout Volume Validation Ratio: current bar vs 30-day median."""
+    if len(volumes) < 30:
+        return 1.0
+    sorted_30 = sorted(volumes[-30:])
+    median = sorted_30[15]
+    return round(volumes[-1] / median, 2) if median > 0 else 1.0
+
+
+def detect_fvg(highs: list[float], lows: list[float]) -> dict:
+    """Detect the nearest Bullish Fair Value Gap (FVG) in 3-candle sequence.
+
+    Bullish FVG: low[i] > high[i-2]  (gap between candle i and i-2)
+    """
+    result: dict = {
+        "bullish_fvg_upper": None,
+        "bullish_fvg_lower": None,
+        "fvg_detected": False,
+    }
+    if len(highs) < 3:
+        return result
+    for i in range(len(highs) - 1, 1, -1):
+        if lows[i] > highs[i - 2]:
+            result["bullish_fvg_lower"] = round(highs[i - 2], 2)
+            result["bullish_fvg_upper"] = round(lows[i], 2)
+            result["fvg_detected"] = True
+            break
+    return result
+
+
+def detect_bos_choch(closes: list[float], highs: list[float], lows: list[float],
+                     swing_bars: int = 10) -> dict:
+    """Detect the last Break of Structure (BOS) and Change of Character (CHOCH)."""
+    result: dict = {
+        "bos_level": None, "bos_type": None,
+        "choch_level": None, "choch_type": None,
+    }
+    if len(closes) < swing_bars * 2:
+        return result
+
+    lookback_highs = highs[-swing_bars * 2: -swing_bars]
+    lookback_lows  = lows[-swing_bars * 2: -swing_bars]
+    if not lookback_highs or not lookback_lows:
+        return result
+
+    prior_swing_high = max(lookback_highs)
+    prior_swing_low  = min(lookback_lows)
+    recent_close     = closes[-1]
+    prior_close      = closes[-swing_bars - 1]
+
+    if recent_close > prior_swing_high and prior_close > prior_swing_high * 0.98:
+        result["bos_level"] = round(prior_swing_high, 2)
+        result["bos_type"]  = "BULLISH_BOS"
+    elif recent_close < prior_swing_low and prior_close < prior_swing_low * 1.02:
+        result["bos_level"] = round(prior_swing_low, 2)
+        result["bos_type"]  = "BEARISH_BOS"
+
+    prior_trend_close = closes[-swing_bars * 2] if len(closes) >= swing_bars * 2 else closes[0]
+    if prior_trend_close > prior_swing_high and recent_close > prior_swing_high:
+        result["choch_level"] = round(prior_swing_high, 2)
+        result["choch_type"]  = "BULLISH_CHOCH"
+    elif prior_trend_close < prior_swing_low and recent_close < prior_swing_low:
+        result["choch_level"] = round(prior_swing_low, 2)
+        result["choch_type"]  = "BEARISH_CHOCH"
+
+    return result
+
+
+def detect_demand_zone(lows: list[float], volumes: list[float], lookback: int = 60) -> dict:
+    """Identify primary Institutional Demand Zone as the highest-volume support band."""
+    result: dict = {"demand_zone_lower": None, "demand_zone_upper": None}
+    if len(lows) < lookback or len(volumes) < lookback:
+        return result
+    lows_window = lows[-lookback:]
+    vols_window = volumes[-lookback:]
+    max_vol_idx = vols_window.index(max(vols_window))
+    anchor_low  = lows_window[max_vol_idx]
+    result["demand_zone_lower"] = round(anchor_low * 0.985, 2)
+    result["demand_zone_upper"] = round(anchor_low * 1.015, 2)
+    return result
+
+
+def detect_rsi_divergence(closes: list[float], swing_window: int = 14) -> bool:
+    """Detect Class-A Bullish RSI Divergence (price lower low + RSI higher low)."""
+    if len(closes) < swing_window * 2 + 1:
+        return False
+    rsi_full = []
+    for end in range(swing_window + 1, len(closes) + 1):
+        r = _rsi(closes[:end], swing_window)
+        rsi_full.append(r)
+    if len(rsi_full) < swing_window:
+        return False
+    recent_lows_price = closes[-swing_window:]
+    prior_lows_price  = closes[-swing_window * 2: -swing_window]
+    recent_lows_rsi   = [r for r in rsi_full[-swing_window:] if r is not None]
+    prior_lows_rsi    = [r for r in rsi_full[-swing_window * 2: -swing_window] if r is not None]
+    if not recent_lows_rsi or not prior_lows_rsi:
+        return False
+    return bool(min(recent_lows_price) < min(prior_lows_price) and
+                min(recent_lows_rsi)   > min(prior_lows_rsi))
+
+
+def compute_ema_variances(closes: list[float], ltp: float) -> dict:
+    """Return % deviation of LTP from EMA-20, SMA-50, SMA-100, SMA-200."""
+    result: dict = {
+        "ema20_variance_pct": None,
+        "sma50_variance_pct": None,
+        "sma100_variance_pct": None,
+        "sma200_variance_pct": None,
+    }
+    if len(closes) < 20:
+        return result
+    e20_series = _ema_series(closes, 20)
+    e20 = next((v for v in reversed(e20_series) if v is not None), None)
+    if e20:
+        result["ema20_variance_pct"] = round((ltp - e20) / e20 * 100.0, 2)
+    if len(closes) >= 50:
+        sma50 = sum(closes[-50:]) / 50.0
+        result["sma50_variance_pct"] = round((ltp - sma50) / sma50 * 100.0, 2)
+    if len(closes) >= 100:
+        sma100 = sum(closes[-100:]) / 100.0
+        result["sma100_variance_pct"] = round((ltp - sma100) / sma100 * 100.0, 2)
+    if len(closes) >= 200:
+        sma200 = sum(closes[-200:]) / 200.0
+        result["sma200_variance_pct"] = round((ltp - sma200) / sma200 * 100.0, 2)
+    return result
+
+
+# ---------------------------------------------------------------------------
 if __name__ == "__main__":
     p = analyse_symbol("RELIANCE.NS")
     if p:

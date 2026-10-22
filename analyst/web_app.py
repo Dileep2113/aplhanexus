@@ -85,17 +85,24 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
             elif path == "/api/evening":
                 date_filter = query.get("date", [None])[0]
                 report = self.reviewer.evaluate_date(date_filter)
-                self._serve_json(report.__dict__)
+                from dataclasses import asdict
+                self._serve_json(asdict(report))
             elif path == "/api/research":
                 sym = query.get("symbol", ["RELIANCE.NS"])[0]
-                dossier = self.researcher.research_symbol(sym)
+                _entry_raw = query.get("entry", [None])[0]
+                _alloc_raw = query.get("allocation", [None])[0]
+                _entry_price = float(_entry_raw) if _entry_raw else None
+                _alloc_pct   = float(_alloc_raw) if _alloc_raw else None
+                dossier = self.researcher.research_symbol(
+                    sym, entry_price=_entry_price, allocation_pct=_alloc_pct
+                )
                 self._serve_json(dossier.__dict__)
             elif path == "/api/learning":
                 versions = self.learner.list_strategy_versions()
                 self._serve_json({"versions": versions})
             elif path == "/api/scheduler":
-                statuses = self.scheduler.get_job_statuses() if self.scheduler else {}
-                self._serve_json({"jobs": statuses})
+                statuses = self.scheduler.get_job_statuses() if self.scheduler else {"jobs": {}, "history": []}
+                self._serve_json(statuses)
             elif path == "/api/reports/list":
                 self._serve_json(self._get_report_archive())
             elif path == "/api/reports/view":
@@ -135,9 +142,20 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
                     self._serve_json(res)
                 else:
                     self._serve_json({"error": "Scheduler or job name missing"}, status=400)
+            elif path == "/api/evening/learn":
+                date_filter = query.get("date", [None])[0]
+                report = self.reviewer.evaluate_date(date_filter)
+                exp = self.learner.run_learning_cycle()
+                from dataclasses import asdict
+                self._serve_json({
+                    "status": "PROCESSED",
+                    "failures_analyzed": len(report.failure_details),
+                    "experiment": asdict(exp)
+                })
             elif path == "/api/learning/run":
                 exp = self.learner.run_learning_cycle()
-                self._serve_json(exp.__dict__)
+                from dataclasses import asdict
+                self._serve_json(asdict(exp))
             elif path == "/api/learning/rollback":
                 target = query.get("version", [""])[0]
                 success = self.learner.rollback_to_version(target)
@@ -1210,10 +1228,14 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
                 </div>
             </div>
 
-            <div class="topbar-actions">
+            <div class="topbar-actions" style="display:flex; align-items:center; gap:8px;">
+                <div id="topbar-scheduler-status" style="display:inline-flex; gap:6px; align-items:center;">
+                    <span id="badge-am" class="btn" style="font-size:0.75rem; padding:4px 8px; cursor:pointer; background:#f8fafc;" onclick="switchTab('tab-scheduler')" title="Morning Pre-Market Briefing Status">🌅 AM: <span id="val-am" style="font-weight:700; color:#64748b;">Pending</span></span>
+                    <span id="badge-pm" class="btn" style="font-size:0.75rem; padding:4px 8px; cursor:pointer; background:#f8fafc;" onclick="switchTab('tab-scheduler')" title="Evening Outcome Audit Status">📊 PM: <span id="val-pm" style="font-weight:700; color:#64748b;">Pending</span></span>
+                </div>
                 <button class="btn btn-primary" onclick="showScanModal()">⚡ Scan</button>
-                <button class="btn" onclick="triggerJob('morning_report')">🌅 AM</button>
-                <button class="btn" onclick="triggerJob('evening_review')">📊 PM</button>
+                <button class="btn" onclick="triggerJob('morning_report')">🌅 Run AM</button>
+                <button class="btn" onclick="triggerJob('evening_review')">📊 Run PM</button>
             </div>
         </header>
 
@@ -1340,39 +1362,51 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
         <!-- PANEL 4: DEEP STOCK RESEARCH -->
         <div id="tab-research" class="panel">
             <div class="metric-card" style="margin-bottom:20px;">
-                <div class="metric-card-lbl">On-Demand Institutional Equity Research</div>
-                <div style="display:flex; gap:10px; margin-top:10px;">
-                    <input type="text" id="research-sym-input" placeholder="Enter NSE Symbol (e.g. RELIANCE, TCS, INFY, HDFCBANK, TATAMOTORS)" style="flex:1; background:#ffffff; border:1px solid #cbd5e1; color:#0f172a; padding:9px 14px; border-radius:6px;">
+                <div class="metric-card-lbl">SEBI-Aligned Quantitative Stock Engine</div>
+                <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+                    <input type="text" id="research-sym-input" placeholder="NSE Symbol (e.g. RELIANCE, TCS, INFY)" style="flex:2; min-width:200px; background:#ffffff; border:1px solid #cbd5e1; color:#0f172a; padding:9px 14px; border-radius:6px;">
+                    <input type="number" id="research-entry" placeholder="Avg Cost / Entry ₹" step="0.01" min="0" style="flex:1; min-width:140px; background:#ffffff; border:1px solid #cbd5e1; color:#0f172a; padding:9px 14px; border-radius:6px;">
+                    <input type="number" id="research-alloc" placeholder="Capital Allocation %" step="0.1" min="0" max="100" style="flex:1; min-width:140px; background:#ffffff; border:1px solid #cbd5e1; color:#0f172a; padding:9px 14px; border-radius:6px;">
                     <button class="btn btn-primary" onclick="executeResearch()">Generate Dossier</button>
                 </div>
                 <div style="display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; align-items:center;">
-                    <span style="font-size:0.72rem; color:var(--text-dimmed); font-weight:600;">POPULAR:</span>
+                    <span style="font-size:0.72rem; color:var(--text-dimmed); font-weight:600;">QUICK:</span>
                     <button class="btn-action" onclick="quickResearch('RELIANCE.NS')">RELIANCE</button>
                     <button class="btn-action" onclick="quickResearch('TCS.NS')">TCS</button>
                     <button class="btn-action" onclick="quickResearch('INFY.NS')">INFY</button>
                     <button class="btn-action" onclick="quickResearch('HDFCBANK.NS')">HDFCBANK</button>
                     <button class="btn-action" onclick="quickResearch('TATAMOTORS.NS')">TATAMOTORS</button>
                 </div>
+                <div style="font-size:0.75rem; color:var(--text-dimmed); margin-top:8px;">
+                    Gann Square of 9 · Wyckoff Blueprint · SMC Architecture · Forensic Audit · Smart Money · Trade Directive
+                </div>
             </div>
             <div id="research-results-container" style="color:var(--text-dimmed); padding:30px; text-align:center;">
-                Enter any symbol above to evaluate business moats, segment revenue, management governance, cash flow conversion, Bear/Base/Bull valuation triad, and verified news.
+                Enter any NSE symbol to generate a full SEBI-aligned quantitative dossier with Gann targets, Wyckoff phase, FVG/BOS/CHOCH, forensic earnings audit, and institutional trade directive.
             </div>
         </div>
 
         <!-- PANEL 5: POST-MARKET P&L AUDIT -->
         <div id="tab-evening" class="panel">
             <div class="metric-card" style="margin-bottom:18px;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
                     <div>
-                        <div class="metric-card-lbl">Post-Market Settlement & Friction Audit</div>
+                        <div class="metric-card-lbl">Post-Market Settlement, Trade Audit & Failure Diagnosis</div>
                         <div style="font-size:0.82rem; color:var(--text-dimmed); margin-top:3px;">
-                            Compares signals against settlement data, deducting statutory taxes (STT 0.025%, GST 18%, NSE turnover, slippage).
+                            Audits all suggested trades against exchange settlement bars, deducting statutory STT/GST/slippage friction, diagnosing why failed trades failed, and bridging root causes to self-learning.
                         </div>
                     </div>
-                    <button class="btn btn-primary" onclick="loadEveningReview()">Evaluate Outcomes</button>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <button class="btn btn-primary" onclick="loadEveningReview()">Audit Session Outcomes</button>
+                        <button class="btn" onclick="feedEveningToLearning()" style="background:#eff6ff; border-color:#3b82f6; color:#1d4ed8; font-weight:600;">🤖 Add Failures to Self-Learning</button>
+                    </div>
                 </div>
             </div>
-            <div id="evening-results-container"></div>
+            <div id="evening-results-container">
+                <div style="padding:40px; text-align:center; color:var(--text-dimmed);">
+                    Click <b>Audit Session Outcomes</b> above to evaluate today's suggested setups, inspect winning vs failed trades, view root-cause diagnoses, and feed failures into self-learning.
+                </div>
+            </div>
         </div>
 
         <!-- PANEL 6: SELF-LEARNING OPTIMIZER -->
@@ -1394,12 +1428,21 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
         <!-- PANEL 7: SCHEDULER & AUTOMATION -->
         <div id="tab-scheduler" class="panel">
             <div class="metric-card" style="margin-bottom:18px;">
-                <div class="metric-card-lbl">Autonomous Background Daemon</div>
-                <div style="font-size:0.82rem; color:var(--text-dimmed); margin-top:3px;">
-                    Scheduled jobs run on persistent background timers independently of open browser tabs.
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                    <div>
+                        <div class="metric-card-lbl">Autonomous Background Daemon & Scheduler Monitoring</div>
+                        <div style="font-size:0.82rem; color:var(--text-dimmed); margin-top:3px;">
+                            Scheduled jobs run on persistent background timers independently of open browser tabs.
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="fetchSchedulerStatuses()">Refresh Statuses</button>
                 </div>
             </div>
-            <div class="table-panel">
+
+            <div class="table-panel" style="margin-bottom:24px;">
+                <div style="padding:12px 16px; font-weight:700; color:#0f172a; border-bottom:1px solid var(--border); font-size:0.9rem;">
+                    Active Scheduled Jobs (Configured Cadence)
+                </div>
                 <table>
                     <thead>
                         <tr>
@@ -1407,11 +1450,33 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
                             <th>Schedule (IST)</th>
                             <th>Next Execution</th>
                             <th>Last Status</th>
+                            <th>Last Duration</th>
+                            <th>Outcome & Output Summary</th>
                             <th>Action</th>
                         </tr>
                     </thead>
                     <tbody id="scheduler-table-body">
-                        <tr><td colspan="5" style="padding:20px; text-align:center;">Loading scheduled jobs...</td></tr>
+                        <tr><td colspan="7" style="padding:20px; text-align:center;">Loading scheduled jobs...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="table-panel">
+                <div style="padding:12px 16px; font-weight:700; color:#0f172a; border-bottom:1px solid var(--border); font-size:0.9rem;">
+                    Recent Background Execution History & Audit Log (Last 20 Runs)
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Job Name</th>
+                            <th>Executed At (IST)</th>
+                            <th>Duration</th>
+                            <th>Status</th>
+                            <th>Outcome Details</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scheduler-history-table-body">
+                        <tr><td colspan="5" style="padding:20px; text-align:center; color:var(--text-dimmed);">Loading execution log history...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -1544,6 +1609,7 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
             toggleSidebar(false);
 
             if (tabId === 'tab-scheduler') fetchSchedulerStatuses();
+            if (tabId === 'tab-evening') loadEveningReview();
             if (tabId === 'tab-archive') loadReportsArchive();
         }}
 
@@ -1637,15 +1703,35 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
         async function executeResearch() {{
             const sym = document.getElementById('research-sym-input').value.trim();
             if (!sym) return;
+            const entry = (document.getElementById('research-entry') || {{}}).value?.trim() || '';
+            const alloc = (document.getElementById('research-alloc') || {{}}).value?.trim() || '';
             const container = document.getElementById('research-results-container');
-            container.innerHTML = '<div style="padding:40px; color:#2563eb; font-weight:600;">Conducting institutional analysis on ' + sym + '...</div>';
+            container.innerHTML = '<div style="padding:40px; color:#2563eb; font-weight:600;">Conducting SEBI-aligned quantitative analysis on ' + sym + '...<br><small style="font-weight:400; color:#64748b;">Computing Gann matrix \xb7 Wyckoff phase \xb7 SMC architecture \xb7 Forensic audit</small></div>';
             try {{
-                const res = await fetch('/api/research?symbol=' + encodeURIComponent(sym));
+                let url = '/api/research?symbol=' + encodeURIComponent(sym);
+                if (entry) url += '&entry=' + encodeURIComponent(entry);
+                if (alloc) url += '&allocation=' + encodeURIComponent(alloc);
+                const res = await fetch(url);
                 const d = await res.json();
                 renderResearchDossier(d);
             }} catch (e) {{
                 container.innerHTML = '<div style="color:#dc2626;">Error: ' + e + '</div>';
             }}
+        }}
+
+        function _fmt(v, prefix, suffix, na) {{
+            prefix = prefix || '\u20b9'; suffix = suffix || ''; na = na || 'N/A';
+            if (v === null || v === undefined || v === 'N/A') return '<span style="color:#94a3b8;">' + na + '</span>';
+            if (typeof v === 'string' && v.startsWith('[')) return '<span style="color:#94a3b8; font-size:0.78em;">' + v + '</span>';
+            const num = parseFloat(v);
+            if (!isNaN(num)) return prefix + num.toLocaleString('en-IN', {{maximumFractionDigits:2}}) + suffix;
+            return v;
+        }}
+        function _pct(v) {{
+            if (v === null || v === undefined) return '<span style="color:#94a3b8;">N/A</span>';
+            const n = parseFloat(v);
+            const c = n >= 0 ? '#059669' : '#dc2626';
+            return '<span style="color:' + c + '; font-weight:600;">' + (n >= 0 ? '+' : '') + n.toFixed(2) + '%</span>';
         }}
 
         function renderResearchDossier(d) {{
@@ -1654,117 +1740,431 @@ class AnalystWebHandler(BaseHTTPRequestHandler):
             const bear = v.bear_case || {{}};
             const base = v.base_case || {{}};
             const bull = v.bull_case || {{}};
+            const g  = d.gann_matrix    || {{}};
+            const w  = d.wyckoff_smc    || {{}};
+            const fa = d.forensic_audit || {{}};
+            const sm = d.smart_money    || {{}};
+            const td = d.trade_directive || {{}};
+            const signalColor = {{BUY:'#059669',REDUCE:'#dc2626',EXIT:'#b91c1c',HOLD:'#d97706'}};
+            const biasColor   = {{BULLISH:'#059669',BEARISH:'#dc2626','NEUTRAL-COMPRESSED':'#d97706'}};
+            const signal = td.swing_signal || 'HOLD';
+            const bias   = td.value_bias   || 'NEUTRAL-COMPRESSED';
 
-            container.innerHTML = `
-                <div class="metric-card" style="text-align:left; margin-bottom:16px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <h2 style="font-size:1.2rem; color:#0f172a;">${{d.company_name}} (${{d.symbol}})</h2>
-                        <div style="font-size:0.82rem; color:#2563eb; font-weight:600;">Sector: ${{d.sector}} | Industry: ${{d.industry}}</div>
-                    </div>
-                    <div style="display:flex; gap:18px; font-size:1rem; margin:10px 0; font-family:'JetBrains Mono',monospace;">
-                        <div><b>LTP:</b> ₹${{d.ltp.toLocaleString()}}</div>
-                        <div><b>Market Cap:</b> ₹${{(d.market_cap_cr || 0).toLocaleString()}} Cr</div>
-                    </div>
-                    <p style="color:#475569; line-height:1.6; font-size:0.86rem;">${{d.business_model}}</p>
-                </div>
+            function kv(k, v_html) {{
+                return '<div style="display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px dotted #f1f5f9; font-size:0.82rem; gap:8px;"><span style="color:#64748b; flex-shrink:0;">' + k + '</span><span style="font-weight:600; color:#0f172a; text-align:right;">' + v_html + '</span></div>';
+            }}
 
-                <div class="metrics-grid" style="text-align:left;">
-                    <div class="metric-card" style="border-top: 3px solid #ef4444;">
-                        <div style="color:#b91c1c; font-weight:600; font-size:0.78rem;">Bear Case Valuation</div>
-                        <div style="font-size:1.6rem; font-weight:700; font-family:'JetBrains Mono',monospace; margin:6px 0; color:#0f172a;">₹${{(bear.fair_value || 0).toLocaleString()}}</div>
-                        <div style="font-size:0.75rem; color:#64748b;">${{bear.assumptions || ''}}</div>
-                    </div>
-                    <div class="metric-card" style="border-top: 3px solid #2563eb;">
-                        <div style="color:#1d4ed8; font-weight:600; font-size:0.78rem;">Base Case Fair Value</div>
-                        <div style="font-size:1.6rem; font-weight:700; font-family:'JetBrains Mono',monospace; margin:6px 0; color:#0f172a;">₹${{(base.fair_value || 0).toLocaleString()}}</div>
-                        <div style="font-size:0.75rem; color:#64748b;">${{base.assumptions || ''}}</div>
-                    </div>
-                    <div class="metric-card" style="border-top: 3px solid #059669;">
-                        <div style="color:#047857; font-weight:600; font-size:0.78rem;">Bull Case Expansion</div>
-                        <div style="font-size:1.6rem; font-weight:700; font-family:'JetBrains Mono',monospace; margin:6px 0; color:#0f172a;">₹${{(bull.fair_value || 0).toLocaleString()}}</div>
-                        <div style="font-size:0.75rem; color:#64748b;">${{bull.assumptions || ''}}</div>
-                    </div>
-                </div>
+            let html = '';
 
-                <div class="metric-card" style="text-align:left;">
-                    <div class="metric-card-lbl" style="margin-bottom:10px;">Verified News & Catalysts (Clickable Sources)</div>
-                    <table>
-                        <thead><tr><th>Category</th><th>Headline & Source</th><th>Publisher</th></tr></thead>
-                        <tbody>
-                            ${{(d.catalysts || []).map(c => `
-                                <tr>
-                                    <td style="padding:10px;"><span class="pill pill-strong">${{c.category}}</span></td>
-                                    <td style="padding:10px;"><a href="${{c.url}}" target="_blank" style="color:#2563eb; text-decoration:none; font-weight:500;">${{c.title}}</a></td>
-                                    <td style="padding:10px; font-size:0.8rem; color:#64748b;">${{c.publisher}}</td>
-                                </tr>
-                            `).join('') || '<tr><td colspan="3" style="padding:14px; text-align:center;">No recent news recorded.</td></tr>'}}
-                        </tbody>
-                    </table>
-                </div>
-            `;
+            // Header
+            html += '<div class="metric-card" style="text-align:left; margin-bottom:16px; border-left:4px solid #2563eb;">'
+                + '<div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px;">'
+                + '<div><h2 style="font-size:1.2rem; color:#0f172a; margin:0;">' + d.company_name + ' <span style="color:#2563eb;">(' + d.symbol + ')</span></h2>'
+                + '<div style="font-size:0.82rem; color:#64748b; margin-top:4px;">' + d.sector + ' \xb7 ' + d.industry + '</div></div>'
+                + '<div style="text-align:right;"><div style="font-size:1.4rem; font-weight:700; font-family:monospace; color:#0f172a;">\u20b9' + (d.ltp||0).toLocaleString('en-IN') + '</div>'
+                + '<div style="font-size:0.78rem; color:#64748b;">Mkt Cap \u20b9' + (d.market_cap_cr||0).toLocaleString('en-IN') + ' Cr</div></div></div>'
+                + '<p style="color:#475569; line-height:1.6; font-size:0.85rem; margin:10px 0 0;">' + d.business_model + '</p></div>';
+
+            // Section 6: Trade Directive Banner
+            html += '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:16px; text-align:left;">';
+            html += '<div class="metric-card" style="border-top:4px solid ' + (signalColor[signal]||'#64748b') + ';">'
+                + '<div style="font-size:0.7rem; font-weight:700; color:#64748b; text-transform:uppercase;">Swing Signal</div>'
+                + '<div style="font-size:1.6rem; font-weight:800; color:' + (signalColor[signal]||'#64748b') + '; margin:4px 0;">' + signal + '</div>'
+                + '<div style="font-size:0.75rem; color:#64748b;">' + (td.setup_category||'') + '</div></div>';
+            html += '<div class="metric-card" style="border-top:4px solid ' + (biasColor[bias]||'#64748b') + ';">'
+                + '<div style="font-size:0.7rem; font-weight:700; color:#64748b; text-transform:uppercase;">Value Bias</div>'
+                + '<div style="font-size:1.1rem; font-weight:800; color:' + (biasColor[bias]||'#64748b') + '; margin:4px 0;">' + bias + '</div>'
+                + '<div style="font-size:0.72rem; color:#64748b;">' + (td.trade_call||'') + '</div></div>';
+            if (td.risk_reward_ratio) {{
+                html += '<div class="metric-card"><div style="font-size:0.7rem; font-weight:700; color:#64748b; text-transform:uppercase;">Risk:Reward</div>'
+                    + '<div style="font-size:1.6rem; font-weight:800; color:#2563eb; margin:4px 0;">' + td.risk_reward_ratio + 'x</div>'
+                    + '<div style="font-size:0.75rem; color:#64748b;">From \u20b9' + (td.entry_price||'').toLocaleString('en-IN') + '</div></div>';
+            }}
+            if (td.gann_stop) {{
+                html += '<div class="metric-card" style="border-top:4px solid #dc2626;">'
+                    + '<div style="font-size:0.7rem; font-weight:700; color:#dc2626; text-transform:uppercase;">Gann Hard Stop</div>'
+                    + '<div style="font-size:1.2rem; font-weight:800; color:#dc2626; margin:4px 0;">\u20b9' + (td.gann_stop||0).toLocaleString('en-IN') + '</div>'
+                    + '<div style="font-size:0.75rem; color:#64748b;">45\xb0 Invalidation Floor</div></div>';
+            }}
+            html += '</div>';
+
+            // Section 4: Gann Matrix
+            html += '<div class="metric-card" style="text-align:left; margin-bottom:16px;">'
+                + '<div style="font-weight:700; color:#2563eb; margin-bottom:10px; font-size:0.9rem;">\u29c6 Section 4 \u2014 W.D. Gann Square of 9 Target Matrix</div>'
+                + '<div style="overflow-x:auto;"><table style="width:100%; border-collapse:collapse; font-size:0.84rem;">'
+                + '<thead><tr style="background:#f8fafc;">'
+                + '<th style="padding:8px 10px; text-align:left; color:#64748b; border-bottom:2px solid #e2e8f0;">Vector</th>'
+                + '<th style="padding:8px 10px; text-align:right; color:#64748b; border-bottom:2px solid #e2e8f0;">Price</th>'
+                + '<th style="padding:8px 10px; text-align:right; color:#64748b; border-bottom:2px solid #e2e8f0;">% Dist</th>'
+                + '<th style="padding:8px 10px; text-align:center; color:#64748b; border-bottom:2px solid #e2e8f0;">Horizon</th>'
+                + '<th style="padding:8px 10px; text-align:left; color:#64748b; border-bottom:2px solid #e2e8f0;">Catalyst</th>'
+                + '</tr></thead><tbody>'
+                + '<tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:8px 10px; font-weight:600; color:#059669;">T1 \u2014 90\xb0 Vector</td><td style="padding:8px 10px; text-align:right; font-family:monospace; font-weight:700;">' + _fmt(g.t1_price) + '</td><td style="padding:8px 10px; text-align:right;">' + _pct(g.t1_upside_pct) + '</td><td style="padding:8px 10px; text-align:center; color:#2563eb;">' + (g.t1_horizon_days||22) + ' d</td><td style="padding:8px 10px; color:#64748b; font-size:0.78rem;">' + (g.t1_catalyst||'') + '</td></tr>'
+                + '<tr style="border-bottom:1px solid #f1f5f9; background:#fafafa;"><td style="padding:8px 10px; font-weight:600; color:#2563eb;">T2 \u2014 180\xb0 Vector</td><td style="padding:8px 10px; text-align:right; font-family:monospace; font-weight:700;">' + _fmt(g.t2_price) + '</td><td style="padding:8px 10px; text-align:right;">' + _pct(g.t2_upside_pct) + '</td><td style="padding:8px 10px; text-align:center; color:#2563eb;">' + (g.t2_horizon_days||45) + ' d</td><td style="padding:8px 10px; color:#64748b; font-size:0.78rem;">' + (g.t2_catalyst||'') + '</td></tr>'
+                + '<tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:8px 10px; font-weight:600; color:#7c3aed;">T3 \u2014 360\xb0 Master Cycle</td><td style="padding:8px 10px; text-align:right; font-family:monospace; font-weight:700;">' + _fmt(g.t3_price) + '</td><td style="padding:8px 10px; text-align:right;">' + _pct(g.t3_upside_pct) + '</td><td style="padding:8px 10px; text-align:center; color:#2563eb;">' + (g.t3_horizon_days||90) + ' d</td><td style="padding:8px 10px; color:#64748b; font-size:0.78rem;">' + (g.t3_catalyst||'') + '</td></tr>'
+                + '<tr style="background:#fef2f2;"><td style="padding:8px 10px; font-weight:700; color:#dc2626;">\u26a0 Invalidation Floor</td><td style="padding:8px 10px; text-align:right; font-family:monospace; font-weight:700; color:#dc2626;">' + _fmt(g.invalidation_floor) + '</td><td style="padding:8px 10px; text-align:right;">' + _pct(g.floor_downside_pct) + '</td><td style="padding:8px 10px; text-align:center; color:#dc2626;">Non-Discret.</td><td style="padding:8px 10px; color:#dc2626; font-size:0.78rem;">Absolute structural 45\xb0 breakdown \u2014 stop-loss mandatory</td></tr>'
+                + '</tbody></table></div>'
+                + '<div style="font-size:0.72rem; color:#94a3b8; margin-top:8px;">Seed: \u20b9' + (g.seed_price||'') + ' \xb7 Base Factor: ' + (g.base_factor||'') + ' \xb7 Formula: (\u230asqrt(CMP)\u230b + \u03b8/180)\xb2</div>'
+                + '</div>';
+
+            // Section 2: Technical Vector / Wyckoff / SMC
+            html += '<div class="metric-card" style="text-align:left; margin-bottom:16px;">'
+                + '<div style="font-weight:700; color:#2563eb; margin-bottom:10px; font-size:0.9rem;">\ud83d\udcca Section 2 \u2014 Technical Vector \xb7 Wyckoff Blueprint \xb7 SMC Architecture</div>'
+                + '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:16px;">'
+                + '<div><div style="font-size:0.72rem; font-weight:700; color:#475569; text-transform:uppercase; margin-bottom:6px; border-bottom:1px solid #e2e8f0; padding-bottom:4px;">Liquidity Vector</div>'
+                + kv('CMP', _fmt(w.cmp))
+                + kv('52W High', _fmt(w.high_52w))
+                + kv('52W Low', _fmt(w.low_52w))
+                + kv('Daily R1', _fmt(w.daily_r1))
+                + kv('Daily R2', _fmt(w.daily_r2))
+                + kv('Daily S1', _fmt(w.daily_s1))
+                + kv('Daily S2', _fmt(w.daily_s2))
+                + kv('10D Avg Vol', w.avg_vol_10d ? (w.avg_vol_10d/1e5).toFixed(2)+'L' : 'N/A')
+                + kv('30D Avg Vol', w.avg_vol_30d ? (w.avg_vol_30d/1e5).toFixed(2)+'L' : 'N/A')
+                + kv('Delivery Vol %', '<span style="color:#94a3b8; font-size:0.78em;">NSE Bhavcopy only</span>')
+                + '</div>'
+                + '<div><div style="font-size:0.72rem; font-weight:700; color:#475569; text-transform:uppercase; margin-bottom:6px; border-bottom:1px solid #e2e8f0; padding-bottom:4px;">Trend Coordinates</div>'
+                + kv('EMA-20', _fmt(w.ema_20))
+                + kv('EMA-20 Var %', _pct(w.ema20_variance_pct))
+                + kv('SMA-50', _fmt(w.ema_50))
+                + kv('SMA-50 Var %', _pct(w.sma50_variance_pct))
+                + kv('SMA-100 Var %', _pct(w.sma100_variance_pct))
+                + kv('EMA-200', _fmt(w.ema_200))
+                + kv('SMA-200 Var %', _pct(w.sma200_variance_pct))
+                + kv('RSI(14)', w.rsi_14 ? w.rsi_14.toFixed(2) : 'N/A')
+                + kv('Class-A RSI Divergence', w.class_a_divergence ? '\u2705 True' : '\u274c False')
+                + '</div>'
+                + '<div><div style="font-size:0.72rem; font-weight:700; color:#475569; text-transform:uppercase; margin-bottom:6px; border-bottom:1px solid #e2e8f0; padding-bottom:4px;">Wyckoff \xb7 SMC</div>'
+                + kv('Wyckoff Phase', w.wyckoff_phase || 'N/A')
+                + kv('Vol Ratio vs 30D Median', w.breakout_vol_ratio ? w.breakout_vol_ratio+'x' : 'N/A')
+                + kv('Bullish FVG', w.fvg_detected ? ('\u20b9'+w.bullish_fvg_lower+' \u2013 \u20b9'+w.bullish_fvg_upper) : 'None detected')
+                + kv('Demand Zone', (w.demand_zone_lower && w.demand_zone_upper) ? ('\u20b9'+w.demand_zone_lower+' \u2013 \u20b9'+w.demand_zone_upper) : 'N/A')
+                + kv('BOS Level', w.bos_level ? ('\u20b9'+w.bos_level+' ('+w.bos_type+')') : 'None')
+                + kv('CHOCH Level', w.choch_level ? ('\u20b9'+w.choch_level+' ('+w.choch_type+')') : 'None')
+                + '</div></div></div>';
+
+            // Section 3: Forensic Audit
+            html += '<div class="metric-card" style="text-align:left; margin-bottom:16px;">'
+                + '<div style="font-weight:700; color:#2563eb; margin-bottom:10px; font-size:0.9rem;">\ud83d\udd2c Section 3 \u2014 Forensic Balance Sheet & Earnings Quality Audit</div>'
+                + '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:16px;">'
+                + '<div><div style="font-size:0.72rem; font-weight:700; color:#475569; text-transform:uppercase; margin-bottom:6px; border-bottom:1px solid #e2e8f0; padding-bottom:4px;">Efficiency & Leverage</div>'
+                + kv('P/E Ratio', fa.pe_ratio !== undefined ? fa.pe_ratio : 'N/A')
+                + kv('Sector P/E', _fmt(fa.sector_pe,'','','—'))
+                + kv('P/B Ratio', fa.pb_ratio !== undefined ? fa.pb_ratio : 'N/A')
+                + kv('Debt-to-Equity', fa.debt_to_equity !== undefined ? fa.debt_to_equity : 'N/A')
+                + kv('Core ROE %', fa.roe_pct !== undefined ? fa.roe_pct : 'N/A')
+                + kv('Core ROCE', _fmt(fa.roce_pct,'','','—'))
+                + '</div>'
+                + '<div><div style="font-size:0.72rem; font-weight:700; color:#475569; text-transform:uppercase; margin-bottom:6px; border-bottom:1px solid #e2e8f0; padding-bottom:4px;">Earnings Quality</div>'
+                + kv('Revenue YoY %', _fmt(fa.revenue_yoy_growth_pct,'','%','—'))
+                + kv('OPM %', fa.operating_profit_margin_pct !== undefined ? fa.operating_profit_margin_pct : 'N/A')
+                + kv('OCF/PAT Ratio', fa.ocf_pat_ratio !== undefined ? fa.ocf_pat_ratio : 'N/A')
+                + kv('Earnings Realization Idx', fa.earnings_realization_idx !== null && fa.earnings_realization_idx !== undefined ? fa.earnings_realization_idx : 'N/A')
+                + kv('Operating CF (\u20b9Cr)', _fmt(fa.ocf_cr))
+                + '</div>'
+                + '<div><div style="font-size:0.72rem; font-weight:700; color:#475569; text-transform:uppercase; margin-bottom:6px; border-bottom:1px solid #e2e8f0; padding-bottom:4px;">Vulnerability Check</div>'
+                + kv('Promoter Pledge %', _fmt(fa.promoter_pledging_pct,'','','—'))
+                + kv('Working Capital Days', _fmt(fa.working_capital_days,'','','—'))
+                + kv('FX Exposure Risk', fa.fx_exposure_risk || 'N/A')
+                + '</div></div></div>';
+
+            // Section 5: Smart Money
+            html += '<div class="metric-card" style="text-align:left; margin-bottom:16px;">'
+                + '<div style="font-weight:700; color:#2563eb; margin-bottom:10px; font-size:0.9rem;">\ud83c\udfe6 Section 5 \u2014 Social Intel & Smart Money Flow Integration</div>'
+                + '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">'
+                + [['FPI Net Change Q-o-Q', sm.fpi_net_change_qoq],['DII / MF Net Change Q-o-Q', sm.dii_net_change_qoq],['Block Deals (90 Days)', sm.block_deal_summary],['Screener Platforms', sm.screener_intel],['Smart Money Note', sm.smart_money_note]].map(function(item) {{
+                    return '<div style="padding:10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px;">'
+                        + '<div style="font-size:0.7rem; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:4px;">' + item[0] + '</div>'
+                        + '<div style="font-size:0.82rem; color:' + (typeof item[1] === 'string' && item[1].startsWith('[') ? '#94a3b8' : '#0f172a') + ';">' + (item[1]||'N/A') + '</div></div>';
+                }}).join('')
+                + '</div></div>';
+
+            // Valuation Triad
+            html += '<div class="metrics-grid" style="text-align:left; margin-bottom:16px;">'
+                + '<div class="metric-card" style="border-top:3px solid #ef4444;"><div style="color:#b91c1c; font-weight:600; font-size:0.78rem;">Bear Case Valuation</div><div style="font-size:1.6rem; font-weight:700; font-family:monospace; margin:6px 0; color:#0f172a;">\u20b9' + (bear.fair_value||0).toLocaleString('en-IN') + '</div><div style="font-size:0.72rem; color:#ef4444;">' + (bear.upside_pct!==undefined ? (bear.upside_pct>=0?'+':'') + bear.upside_pct + '%' : '') + '</div><div style="font-size:0.75rem; color:#64748b;">' + (bear.assumptions||'') + '</div></div>'
+                + '<div class="metric-card" style="border-top:3px solid #2563eb;"><div style="color:#1d4ed8; font-weight:600; font-size:0.78rem;">Base Case Fair Value</div><div style="font-size:1.6rem; font-weight:700; font-family:monospace; margin:6px 0; color:#0f172a;">\u20b9' + (base.fair_value||0).toLocaleString('en-IN') + '</div><div style="font-size:0.72rem; color:#059669;">' + (base.upside_pct!==undefined ? (base.upside_pct>=0?'+':'') + base.upside_pct + '%' : '') + '</div><div style="font-size:0.75rem; color:#64748b;">' + (base.assumptions||'') + '</div></div>'
+                + '<div class="metric-card" style="border-top:3px solid #059669;"><div style="color:#047857; font-weight:600; font-size:0.78rem;">Bull Case Expansion</div><div style="font-size:1.6rem; font-weight:700; font-family:monospace; margin:6px 0; color:#0f172a;">\u20b9' + (bull.fair_value||0).toLocaleString('en-IN') + '</div><div style="font-size:0.72rem; color:#059669;">' + (bull.upside_pct!==undefined ? '+' + bull.upside_pct + '%' : '') + '</div><div style="font-size:0.75rem; color:#64748b;">' + (bull.assumptions||'') + '</div></div>'
+                + '</div>';
+
+            // Catalysts
+            html += '<div class="metric-card" style="text-align:left;">'
+                + '<div class="metric-card-lbl" style="margin-bottom:10px;">Verified News & Catalysts</div>'
+                + '<table style="width:100%; border-collapse:collapse;"><thead><tr>'
+                + '<th style="padding:8px 10px; text-align:left; color:#64748b; font-size:0.78rem; border-bottom:2px solid #e2e8f0;">Category</th>'
+                + '<th style="padding:8px 10px; text-align:left; color:#64748b; font-size:0.78rem; border-bottom:2px solid #e2e8f0;">Headline</th>'
+                + '<th style="padding:8px 10px; text-align:left; color:#64748b; font-size:0.78rem; border-bottom:2px solid #e2e8f0;">Publisher</th>'
+                + '</tr></thead><tbody>';
+            if ((d.catalysts||[]).length > 0) {{
+                (d.catalysts||[]).forEach(function(c) {{
+                    html += '<tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:10px;"><span class="pill pill-strong">' + c.category + '</span></td>'
+                        + '<td style="padding:10px;"><a href="' + c.url + '" target="_blank" style="color:#2563eb; text-decoration:none; font-weight:500;">' + c.title + '</a></td>'
+                        + '<td style="padding:10px; font-size:0.8rem; color:#64748b;">' + c.publisher + '</td></tr>';
+                }});
+            }} else {{
+                html += '<tr><td colspan="3" style="padding:14px; text-align:center; color:#94a3b8;">No recent news recorded.</td></tr>';
+            }}
+            html += '</tbody></table></div>';
+
+            container.innerHTML = html;
         }}
 
         async function loadEveningReview() {{
             const container = document.getElementById('evening-results-container');
-            container.innerHTML = '<div style="padding:30px; color:#2563eb; font-weight:600;">Auditing daily outcomes against actual settlement data...</div>';
+            container.innerHTML = '<div style="padding:40px; color:#2563eb; font-weight:600; text-align:center;">Auditing session outcomes against exchange settlement bars...<br><small style="color:#64748b; font-weight:400;">Evaluating suggested trades · Classifying failure taxonomy · Computing friction-adjusted P&L</small></div>';
             try {{
                 const res = await fetch('/api/evening');
                 const d = await res.json();
-                container.innerHTML = `
-                    <div class="metrics-grid">
-                        <div class="metric-card"><div class="metric-card-lbl">Win Rate</div><div class="metric-card-val" style="color:${{d.win_rate_pct >= 50 ? '#059669' : '#dc2626'}}">${{d.win_rate_pct}}%</div><div>${{d.win_count}} W / ${{d.loss_count}} L</div></div>
-                        <div class="metric-card"><div class="metric-card-lbl">Profit Factor</div><div class="metric-card-val">${{d.profit_factor}}</div><div>Gross W / Gross L</div></div>
-                        <div class="metric-card"><div class="metric-card-lbl">Net P&L (After Taxes)</div><div class="metric-card-val" style="color:${{d.net_pnl_sum >= 0 ? '#059669' : '#dc2626'}}">₹${{d.net_pnl_sum.toLocaleString()}}</div><div>Net of STT, GST, NSE fees</div></div>
-                        <div class="metric-card"><div class="metric-card-lbl">Ambiguous Trades</div><div class="metric-card-val" style="color:#d97706">${{d.ambiguous_count}}</div><div>Quarantined</div></div>
+                const outcomes = d.outcomes || [];
+                const failures = d.failure_details || [];
+                const failureSummary = d.failure_summary || {{}};
+
+                const statusPill = (st) => {{
+                    if (st === 'TARGET_1_HIT' || st === 'TARGET_2_HIT') return '<span style="background:#05966922; color:#059669; border:1px solid #05966944; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:700;">🎯 ' + st.replace('_', ' ') + '</span>';
+                    if (st === 'STOP_LOSS_HIT') return '<span style="background:#dc262622; color:#dc2626; border:1px solid #dc262644; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:700;">🛑 STOP HIT</span>';
+                    if (st === 'AMBIGUOUS_OUTCOME') return '<span style="background:#d9770622; color:#d97706; border:1px solid #d9770644; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:700;">⚠ AMBIGUOUS</span>';
+                    if (st === 'UNTRIGGERED') return '<span style="background:#64748b22; color:#64748b; border:1px solid #64748b44; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:700;">⏸ UNTRIGGERED</span>';
+                    return '<span style="background:#64748b22; color:#64748b; padding:2px 8px; border-radius:12px; font-size:0.75rem;">' + st + '</span>';
+                }};
+
+                let html = '';
+
+                // 1. KPI Cards
+                html += `
+                    <div class="metrics-grid" style="margin-bottom:20px;">
+                        <div class="metric-card">
+                            <div class="metric-card-lbl">Win Rate (Triggered Trades)</div>
+                            <div class="metric-card-val" style="color:${{d.win_rate_pct >= 50 ? '#059669' : '#dc2626'}}">${{d.win_rate_pct}}%</div>
+                            <div style="font-size:0.75rem; color:var(--text-dimmed); margin-top:3px;">${{d.win_count}} Won / ${{d.loss_count}} Lost (${{d.triggered_trades}} Triggered)</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-card-lbl">Profit Factor</div>
+                            <div class="metric-card-val" style="color:${{d.profit_factor >= 1.5 ? '#059669' : (d.profit_factor >= 1.0 ? '#d97706' : '#dc2626')}}">${{d.profit_factor}}</div>
+                            <div style="font-size:0.75rem; color:var(--text-dimmed); margin-top:3px;">Gross Gains / Gross Losses</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-card-lbl">Net Realized P&L (After Taxes)</div>
+                            <div class="metric-card-val" style="color:${{d.net_pnl_sum >= 0 ? '#059669' : '#dc2626'}}">₹${{d.net_pnl_sum?.toLocaleString('en-IN')}}</div>
+                            <div style="font-size:0.75rem; color:var(--text-dimmed); margin-top:3px;">Deducts STT 0.025%, GST 18%, Stamp & Slippage</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-card-lbl">Ambiguous / Quarantined</div>
+                            <div class="metric-card-val" style="color:#d97706">${{d.ambiguous_count}}</div>
+                            <div style="font-size:0.75rem; color:var(--text-dimmed); margin-top:3px;">Both Target & Stop within range</div>
+                        </div>
                     </div>
                 `;
+
+                // 2. Suggested Trades & Execution Outcomes Table
+                html += `
+                    <div class="table-panel" style="margin-bottom:24px;">
+                        <div style="padding:14px 18px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                            <div>
+                                <h3 style="font-size:0.95rem; font-weight:700; color:#0f172a; margin:0;">Session Trade Audit: What Succeeded vs What Failed</h3>
+                                <div style="font-size:0.78rem; color:#64748b; margin-top:2px;">Complete ledger of suggested setups, execution trigger checks, and post-market failure diagnoses.</div>
+                            </div>
+                            <span style="font-size:0.78rem; background:#eff6ff; color:#1d4ed8; font-weight:600; padding:4px 10px; border-radius:6px;">Date: ${{d.report_date}}</span>
+                        </div>
+                        <div style="overflow-x:auto;">
+                        <table style="width:100%; border-collapse:collapse;">
+                            <thead>
+                                <tr style="background:#f8fafc; font-size:0.78rem; color:#64748b;">
+                                    <th style="padding:10px 12px; text-align:left;">Symbol & Side</th>
+                                    <th style="padding:10px 12px; text-align:left;">Setup Type</th>
+                                    <th style="padding:10px 12px; text-align:right;">Trigger / Entry</th>
+                                    <th style="padding:10px 12px; text-align:right;">Target / Stop</th>
+                                    <th style="padding:10px 12px; text-align:right;">Exit Price</th>
+                                    <th style="padding:10px 12px; text-align:center;">Outcome Status</th>
+                                    <th style="padding:10px 12px; text-align:right;">Net P&L (₹)</th>
+                                    <th style="padding:10px 12px; text-align:center;">MFE / MAE</th>
+                                    <th style="padding:10px 12px; text-align:left; min-width:240px;">Failure Diagnosis & Root Cause ("Why It Failed")</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${{outcomes.length === 0 ? '<tr><td colspan="9" style="padding:30px; text-align:center; color:#94a3b8;">No predictions registered for this session date.</td></tr>' : outcomes.map(o => {
+                                    const isWin = o.net_pnl > 0;
+                                    const isLoss = o.net_pnl < 0;
+                                    const pnlColor = isWin ? '#059669' : (isLoss ? '#dc2626' : '#64748b');
+                                    const sideColor = (o.direction||'LONG').toUpperCase() === 'LONG' ? '#059669' : '#dc2626';
+                                    return `
+                                        <tr style="border-bottom:1px solid #f1f5f9; font-size:0.83rem;">
+                                            <td style="padding:12px; font-weight:700; color:#0f172a;">
+                                                <div>${{o.symbol}}</div>
+                                                <span style="font-size:0.72rem; color:${{sideColor}}; font-weight:700;">${{o.direction}}</span>
+                                            </td>
+                                            <td style="padding:12px; color:#475569; font-size:0.8rem;">${{(o.setup_type||'Intraday_Breakout').replace(/_/g, ' ')}}</td>
+                                            <td style="padding:12px; text-align:right; font-family:monospace; font-weight:600;">₹${{o.entry_price ? o.entry_price.toLocaleString('en-IN') : 'N/A'}}</td>
+                                            <td style="padding:12px; text-align:right; font-family:monospace; font-size:0.78rem;">
+                                                <div style="color:#059669;">T1: ₹${{o.target1 ? o.target1.toLocaleString('en-IN') : 'N/A'}}</div>
+                                                <div style="color:#dc2626;">SL: ₹${{o.stop_loss ? o.stop_loss.toLocaleString('en-IN') : 'N/A'}}</div>
+                                            </td>
+                                            <td style="padding:12px; text-align:right; font-family:monospace; font-weight:700;">₹${{o.exit_price ? o.exit_price.toLocaleString('en-IN') : '—'}}</td>
+                                            <td style="padding:12px; text-align:center;">${{statusPill(o.outcome_status)}}</td>
+                                            <td style="padding:12px; text-align:right; font-family:monospace; font-weight:700; color:${{pnlColor}};">
+                                                ${{o.net_pnl !== undefined ? (o.net_pnl >= 0 ? '+' : '') + '₹' + o.net_pnl.toLocaleString('en-IN') : '—'}}
+                                                <div style="font-size:0.72rem; font-weight:400;">${{o.net_pnl_pct !== undefined ? (o.net_pnl_pct >= 0 ? '+' : '') + o.net_pnl_pct.toFixed(2) + '%' : ''}}</div>
+                                            </td>
+                                            <td style="padding:12px; text-align:center; font-family:monospace; font-size:0.76rem;">
+                                                <span style="color:#059669;" title="Maximum Favorable Excursion">+${{o.mfe_pct || 0}}%</span> / 
+                                                <span style="color:#dc2626;" title="Maximum Adverse Excursion">-${{o.mae_pct || 0}}%</span>
+                                            </td>
+                                            <td style="padding:12px; font-size:0.78rem;">
+                                                ${{o.failure_root_cause ? `
+                                                    <div style="color:#b91c1c; font-weight:600; margin-bottom:2px;">❌ ${{o.failure_category}}:</div>
+                                                    <div style="color:#475569; line-height:1.4;">${{o.failure_root_cause}}</div>
+                                                    ${{o.remedy_hypothesis ? `<div style="color:#2563eb; font-weight:500; margin-top:3px;">💡 Remedy: ${{o.remedy_hypothesis}}</div>` : ''}}
+                                                ` : `<div style="color:#059669; font-weight:600;">✓ Trade target achieved within risk boundaries.</div>`}}
+                                            </td>
+                                        </tr>
+                                    `;
+                                }).join('')}}
+                            </tbody>
+                        </table>
+                        </div>
+                    </div>
+                `;
+
+                // 3. Failure Mode Breakdown & Self-Learning Bridge
+                html += `
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:18px; margin-bottom:20px;">
+                        <!-- Failure Mode Summary Card -->
+                        <div class="metric-card" style="text-align:left;">
+                            <div class="metric-card-lbl" style="margin-bottom:8px;">Failure Taxonomy Distribution</div>
+                            <div style="font-size:0.8rem; color:#64748b; margin-bottom:12px;">Categorized failure patterns diagnosed across session trades:</div>
+                            ${{Object.keys(failureSummary).length === 0 ? '<div style="color:#059669; font-weight:600; padding:15px; text-align:center;">No systemic trade failures recorded in this session!</div>' : Object.entries(failureSummary).map(([cat, cnt]) => `
+                                <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #f1f5f9;">
+                                    <div>
+                                        <span style="font-weight:700; color:#0f172a; font-size:0.84rem;">${{cat.replace(/_/g, ' ')}}</span>
+                                        <div style="font-size:0.72rem; color:#64748b;">${{cat === 'FALSE_BREAKOUT' ? 'Premature pierce without volume follow-through' : (cat === 'REGIME_MISMATCH' ? 'Divergence from market regime beta' : (cat === 'SPREAD_SLIPPAGE' ? 'Erosion by Indian STT/GST friction' : 'Intraday volatility whip'))}}</div>
+                                    </div>
+                                    <span style="background:#fee2e2; color:#b91c1c; font-weight:700; padding:2px 8px; border-radius:12px; font-size:0.8rem;">${{cnt}} trades</span>
+                                </div>
+                            `).join('')}}
+                        </div>
+
+                        <!-- Self-Learning Bridge Card -->
+                        <div class="metric-card" style="text-align:left; border-left:4px solid #3b82f6;">
+                            <div class="metric-card-lbl" style="margin-bottom:8px;">Bridge to Strategy Self-Learning Optimizer</div>
+                            <div style="font-size:0.82rem; color:#475569; line-height:1.5; margin-bottom:14px;">
+                                Failures diagnosed above are not discarded — they are mathematically ingested into the <b>Self-Learning Optimizer</b>. Parameter mutation adapts RVOL cutoffs, VIX safeguards, and minimum R:R to permanently prevent recurrent loss patterns.
+                            </div>
+                            <button class="btn btn-primary" onclick="feedEveningToLearning()" style="width:100%; justify-content:center; padding:10px; font-weight:600;">
+                                🚀 Ingest Failures & Run Strategy Learning Cycle
+                            </button>
+                            <div id="learning-bridge-result" style="margin-top:14px;"></div>
+                        </div>
+                    </div>
+                `;
+
+                container.innerHTML = html;
             }} catch (e) {{
-                container.innerHTML = '<div style="color:#dc2626;">Error: ' + e + '</div>';
+                container.innerHTML = '<div style="color:#dc2626; padding:30px; text-align:center;">Error loading evening review: ' + e + '</div>';
             }}
         }}
 
-        async function triggerLearningCycle() {{
-            const container = document.getElementById('learning-results-container');
-            container.innerHTML = '<div style="padding:30px; color:#2563eb; font-weight:600;">Running walk-forward validation on mutated parameters...</div>';
+        async function feedEveningToLearning() {{
+            const resultBox = document.getElementById('learning-bridge-result');
+            if (resultBox) {{
+                resultBox.innerHTML = '<div style="color:#2563eb; font-weight:600; font-size:0.82rem;">🤖 Feeding failure patterns to strategy optimizer & running walk-forward validation...</div>';
+            }}
             try {{
-                const res = await fetch('/api/learning/run', {{ method: 'POST' }});
+                const res = await fetch('/api/evening/learn', {{ method: 'POST' }});
                 const d = await res.json();
-                container.innerHTML = `
-                    <div class="metric-card" style="text-align:left;">
-                        <h3>Experiment ${{d.id}}: Decision <span style="color:${{d.decision==='PROMOTED'?'#059669':'#dc2626'}}">${{d.decision}}</span></h3>
-                        <div style="margin-top:6px;"><b>Source:</b> ${{d.source_strategy_version}} &rarr; <b>Candidate:</b> ${{d.candidate_strategy_version}}</div>
-                        ${{d.rejection_reason ? '<div style="color:#dc2626; margin-top:8px;"><b>Reason:</b> ' + d.rejection_reason + '</div>' : ''}}
-                        <div style="margin-top:8px;"><b>Walk-Forward Metrics:</b> Sharpe: ${{d.walk_forward_metrics.sharpe_ratio?.toFixed(2)}}, Win Rate: ${{d.walk_forward_metrics.win_rate_pct?.toFixed(1)}}%, Max DD: ${{d.walk_forward_metrics.max_drawdown_pct?.toFixed(1)}}%</div>
-                    </div>
-                `;
+                const exp = d.experiment || {{}};
+                const metrics = exp.walk_forward_metrics || {{}};
+                const isPromoted = exp.decision === 'PROMOTED';
+                if (resultBox) {{
+                    resultBox.innerHTML = `
+                        <div style="background:#f8fafc; border:1px solid ${{isPromoted ? '#10b981' : '#f59e0b'}}; border-radius:6px; padding:12px; font-size:0.82rem;">
+                            <div style="font-weight:700; color:${{isPromoted ? '#059669' : '#d97706'}}; margin-bottom:4px;">
+                                ${{isPromoted ? '✅ Strategy Successfully Promoted!' : '⏸ Experiment Evaluated (' + exp.decision + ')'}}
+                            </div>
+                            <div><b>Candidate Version:</b> ${{exp.candidate_strategy_version}} (Source: ${{exp.source_strategy_version}})</div>
+                            <div style="margin-top:4px;"><b>Sharpe Ratio:</b> ${{metrics.sharpe_ratio?.toFixed(2) || 'N/A'}} | <b>Win Rate:</b> ${{metrics.win_rate_pct?.toFixed(1) || 'N/A'}}% | <b>Max DD:</b> ${{metrics.max_drawdown_pct?.toFixed(1) || 'N/A'}}%</div>
+                            ${{exp.rejection_reason ? `<div style="color:#dc2626; margin-top:4px; font-size:0.75rem;"><b>Reason:</b> ${{exp.rejection_reason}}</div>` : '<div style="color:#059669; margin-top:4px; font-size:0.75rem;">All institutional promotion gates passed (Sharpe &ge; 1.0, Win Rate &ge; 50%).</div>'}}
+                        </div>
+                    `;
+                }}
             }} catch (e) {{
-                container.innerHTML = '<div style="color:#dc2626;">Error: ' + e + '</div>';
+                if (resultBox) resultBox.innerHTML = '<div style="color:#dc2626; font-size:0.82rem;">Error: ' + e + '</div>';
             }}
         }}
 
         async function fetchSchedulerStatuses() {{
             const tbody = document.getElementById('scheduler-table-body');
+            const historyBody = document.getElementById('scheduler-history-table-body');
             try {{
                 const res = await fetch('/api/scheduler');
                 const d = await res.json();
                 const jobs = d.jobs || {{}};
-                tbody.innerHTML = Object.keys(jobs).map(k => {{
-                    const j = jobs[k];
-                    const statusColor = j.last_status === 'SUCCESS' ? '#059669' : (j.last_status === 'ERROR' ? '#dc2626' : '#64748b');
-                    return `
-                        <tr>
-                            <td style="padding:12px; font-weight:600; color:#0f172a;">${{j.job_name}}</td>
-                            <td style="padding:12px; color:var(--text-dimmed); font-size:0.82rem;">${{j.schedule}}</td>
-                            <td style="padding:12px; color:#2563eb; font-family:'JetBrains Mono',monospace; font-size:0.82rem; font-weight:600;">${{j.next_run || 'Pending'}}</td>
-                            <td style="padding:12px;"><span style="background:#f1f5f9; color:${{statusColor}}; border:1px solid #e2e8f0; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:600;">${{j.last_status}}</span></td>
-                            <td style="padding:12px;"><button class="btn-action" onclick="triggerJob('${{k}}')">Run Now</button></td>
-                        </tr>
-                    `;
-                }}).join('') || '<tr><td colspan="5" style="padding:18px; text-align:center;">No scheduled jobs found.</td></tr>';
+                const history = d.history || [];
+
+                // 1. Update topbar badges
+                const amJob = jobs['morning_report'];
+                if (amJob) {{
+                    const valAm = document.getElementById('val-am');
+                    const badgeAm = document.getElementById('badge-am');
+                    if (valAm) {{
+                        valAm.innerText = amJob.last_status === 'SUCCESS' ? '✓ ' + (amJob.last_run ? amJob.last_run.substring(11, 16) : 'Ran') : (amJob.last_status === 'ERROR' ? '✕ Error' : 'Pending');
+                        valAm.style.color = amJob.last_status === 'SUCCESS' ? '#059669' : (amJob.last_status === 'ERROR' ? '#dc2626' : '#64748b');
+                    }}
+                    if (badgeAm && amJob.last_message) badgeAm.title = 'Morning Briefing: ' + amJob.last_message;
+                }}
+
+                const pmJob = jobs['evening_review'];
+                if (pmJob) {{
+                    const valPm = document.getElementById('val-pm');
+                    const badgePm = document.getElementById('badge-pm');
+                    if (valPm) {{
+                        valPm.innerText = pmJob.last_status === 'SUCCESS' ? '✓ ' + (pmJob.last_run ? pmJob.last_run.substring(11, 16) : 'Ran') : (pmJob.last_status === 'ERROR' ? '✕ Error' : 'Pending');
+                        valPm.style.color = pmJob.last_status === 'SUCCESS' ? '#059669' : (pmJob.last_status === 'ERROR' ? '#dc2626' : '#64748b');
+                    }}
+                    if (badgePm && pmJob.last_message) badgePm.title = 'Evening Review: ' + pmJob.last_message;
+                }}
+
+                // 2. Populate Active Scheduled Jobs Table
+                if (tbody) {{
+                    tbody.innerHTML = Object.keys(jobs).map(k => {{
+                        const j = jobs[k];
+                        const statusColor = j.last_status === 'SUCCESS' ? '#059669' : (j.last_status === 'ERROR' ? '#dc2626' : '#64748b');
+                        const durationStr = j.last_duration_seconds ? j.last_duration_seconds + 's' : '—';
+                        return `
+                            <tr>
+                                <td style="padding:12px; font-weight:600; color:#0f172a;">${{j.job_name}}</td>
+                                <td style="padding:12px; color:var(--text-dimmed); font-size:0.82rem;">${{j.schedule}}</td>
+                                <td style="padding:12px; color:#2563eb; font-family:'JetBrains Mono',monospace; font-size:0.82rem; font-weight:600;">${{j.next_run || 'Pending'}}</td>
+                                <td style="padding:12px;"><span style="background:#f1f5f9; color:${{statusColor}}; border:1px solid #e2e8f0; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:600;">${{j.last_status}}</span></td>
+                                <td style="padding:12px; font-size:0.82rem; font-family:'JetBrains Mono',monospace;">${{durationStr}}</td>
+                                <td style="padding:12px; font-size:0.82rem; color:#475569; max-width:280px;">${{j.last_message || 'Scheduled and ready'}}</td>
+                                <td style="padding:12px;"><button class="btn-action" onclick="triggerJob('${{k}}')">Run Now</button></td>
+                            </tr>
+                        `;
+                    }}).join('') || '<tr><td colspan="7" style="padding:18px; text-align:center;">No scheduled jobs configured.</td></tr>';
+                }}
+
+                // 3. Populate Execution History Log Table
+                if (historyBody) {{
+                    historyBody.innerHTML = history.length === 0 ? '<tr><td colspan="5" style="padding:20px; text-align:center; color:#94a3b8;">No background execution logs recorded yet. Runs will appear here in real-time.</td></tr>' : history.map(h => {{
+                        const statusColor = h.status === 'SUCCESS' ? '#059669' : '#dc2626';
+                        return `
+                            <tr style="border-bottom:1px solid #f1f5f9; font-size:0.82rem;">
+                                <td style="padding:10px 12px; font-weight:600; color:#0f172a;">${{h.job_name}}</td>
+                                <td style="padding:10px 12px; color:#64748b; font-family:'JetBrains Mono',monospace;">${{h.executed_at ? h.executed_at.replace('T', ' ').substring(0, 19) : ''}}</td>
+                                <td style="padding:10px 12px; font-family:'JetBrains Mono',monospace;">${{h.duration_seconds ? h.duration_seconds + 's' : '—'}}</td>
+                                <td style="padding:10px 12px;"><span style="background:#f1f5f9; color:${{statusColor}}; padding:2px 6px; border-radius:4px; font-weight:700; font-size:0.75rem;">${{h.status}}</span></td>
+                                <td style="padding:10px 12px; color:#334155;">${{h.message || ''}}</td>
+                            </tr>
+                        `;
+                    }}).join('');
+                }}
             }} catch (e) {{
-                tbody.innerHTML = '<tr><td colspan="5" style="padding:18px; text-align:center; color:#dc2626;">Error loading jobs: ' + e + '</td></tr>';
+                if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="padding:18px; text-align:center; color:#dc2626;">Error loading jobs: ' + e + '</td></tr>';
             }}
         }}
+
+        // Automatically fetch scheduler statuses on initial load
+        window.addEventListener('DOMContentLoaded', () => {{
+            fetchSchedulerStatuses();
+        }});
 
         async function loadReportsArchive() {{
             const tbody = document.getElementById('archive-table-body');
